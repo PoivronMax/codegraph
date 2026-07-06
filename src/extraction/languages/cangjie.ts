@@ -27,6 +27,73 @@ function directChildOf(node: SyntaxNode, types: readonly string[]): SyntaxNode |
   return null;
 }
 
+/**
+ * Static callee name of a Cangjie call site, given the expression the call
+ * suffix applies to (the named sibling immediately preceding the `callSuffix`
+ * or `trailingLambdaExpression` inside the parent `postfixExpression`).
+ *
+ * The grammar nests suffixes left-associatively — `a.b[i](x)` is
+ * postfixExpression(postfixExpression(postfixExpression(a, .b), [i]), (x)) —
+ * so the callee is decided by the LAST suffix of the preceding expression:
+ *   foo(x)              atomicVariable            → "foo"
+ *   obj.method(x)       …ends in fieldAccess      → "method"
+ *   x?.start()          …ends in fieldAccess      → "start"
+ *   cb?()               …ends in questAccess      → unwrap to "cb"
+ *   this(x)             thisSuperExpression       → "init" (ctor delegation)
+ *   handlers[i]()       …ends in indexAccess      → none (dynamic target)
+ *   f(a)(b)             …ends in callSuffix       → none (curried result)
+ *   { => … }()          lambdaExpression          → none (IIFE)
+ * Returning undefined emits NO reference — a wrong name would let the
+ * resolver link an arbitrary same-named function, worse than no edge.
+ */
+export function cangjieCalleeName(expr: SyntaxNode | null, source: string): string | undefined {
+  for (let depth = 0; expr && depth < 32; depth++) {
+    switch (expr.type) {
+      case 'varBindingPattern':
+      case 'identifier':
+      case 'scoped_identifier': {
+        const text = getNodeText(expr, source).trim();
+        return text || undefined;
+      }
+      case 'atomicVariable':
+      case 'fieldAccess':
+        // Both carry a single name child (fieldAccess: `.name` → atomicVariable)
+        expr = expr.namedChildren.find((c) => c !== null) ?? null;
+        continue;
+      case 'postfixExpression': {
+        const children = expr.namedChildren.filter((c) => c !== null);
+        const last = children[children.length - 1] ?? null;
+        if (!last) return undefined;
+        if (last.type === 'fieldAccess') {
+          expr = last;
+          continue;
+        }
+        if (last.type === 'questAccess') {
+          // `cb?()` — the `?` is a no-op for naming; unwrap to what precedes it
+          expr = children.length >= 2 ? children[children.length - 2]! : null;
+          continue;
+        }
+        if (children.length === 1) {
+          expr = last;
+          continue;
+        }
+        // indexAccess / callSuffix / trailingLambdaExpression / literals:
+        // the called value is computed — no static name.
+        return undefined;
+      }
+      case 'thisSuperExpression':
+        // `this(...)` delegates to another constructor of the SAME class —
+        // same-file preference resolves the bare name. `super(...)` targets
+        // the parent's ctor; a bare "init" would mis-link to our own, so stay
+        // silent there.
+        return getNodeText(expr, source).trim() === 'this' ? 'init' : undefined;
+      default:
+        return undefined;
+    }
+  }
+  return undefined;
+}
+
 const NAME_CHILD_TYPES: Record<string, string> = {
   functionDefinition: 'funcName',
   classDefinition: 'className',
@@ -57,10 +124,12 @@ export const cangjieExtractor: LanguageExtractor = {
   enumTypes: ['enumDefinition'],
   typeAliasTypes: [],
   importTypes: ['importList'],
-  // A call is `postfixExpression` carrying a `callSuffix` child; the callee
-  // name lives OUTSIDE the suffix (rightmost name-leaf preceding it), so call
-  // extraction is a cangjie branch in extractCall — see tree-sitter.ts.
-  callTypes: ['callSuffix'],
+  // A call is a `callSuffix` (`foo(x)`) or a paren-less trailing lambda
+  // (`Column { … }`, `list.forEach { x => … }` — the dominant ArkUI idiom,
+  // which produces NO callSuffix at all) hanging off a `postfixExpression`;
+  // the callee is the suffix's preceding sibling, resolved structurally by
+  // cangjieCalleeName via the cangjie branch in extractCall (tree-sitter.ts).
+  callTypes: ['callSuffix', 'trailingLambdaExpression'],
   variableTypes: [],
   // propertyDefinition is handled entirely by the visitNode hook below (the
   // core's extractProperty neither finds `propertyName` nor visits the

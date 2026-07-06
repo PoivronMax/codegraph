@@ -22,6 +22,7 @@ import { isGeneratedFile } from './generated-detection';
 import type { LanguageExtractor, ExtractorContext } from './tree-sitter-types';
 import { EXTRACTORS } from './languages';
 import { stripCppTemplateArgs } from './languages/c-cpp';
+import { cangjieCalleeName } from './languages/cangjie';
 import { LiquidExtractor } from './liquid-extractor';
 import { RazorExtractor } from './razor-extractor';
 import { SvelteExtractor } from './svelte-extractor';
@@ -3627,36 +3628,26 @@ export class TreeSitterExtractor {
     const callerId = this.nodeStack[this.nodeStack.length - 1];
     if (!callerId) return;
 
-    // Cangjie: a call site is a `callSuffix` (the `(args)` part) hanging off a
-    // `postfixExpression` — the grammar has no `function` field and the callee
-    // name is not the suffix's sibling but the rightmost name-leaf that ends
-    // at or before the suffix's start: `foo(` → foo, `obj.method(` → method.
-    // Name leaves here are `varBindingPattern` (this grammar wraps most name
-    // uses in it) plus bare `identifier`/`scoped_identifier`.
+    // Cangjie: a call site is a `callSuffix` (`foo(args)`) or a paren-less
+    // `trailingLambdaExpression` (`Column { … }`) hanging off a
+    // `postfixExpression`. The callee expression is the named sibling
+    // immediately preceding the suffix; cangjieCalleeName resolves its static
+    // name structurally (and stays silent for computed targets like
+    // `handlers[i]()` or `f(a)(b)`, where any name would be wrong). A trailing
+    // lambda following a parenthesized call (`runTask(1) { … }`) resolves to
+    // no name — the callSuffix already recorded that call — so nothing
+    // double-emits.
     if (this.language === 'cangjie') {
-      if (node.type !== 'callSuffix') return;
+      if (node.type !== 'callSuffix' && node.type !== 'trailingLambdaExpression') return;
       const parent = node.parent;
       if (!parent) return;
-      const cut = node.startIndex;
-      let bestEnd = -1;
-      let calleeName: string | undefined;
-      const stack: SyntaxNode[] = [parent];
-      while (stack.length > 0) {
-        const current = stack.pop()!;
-        if (
-          (current.type === 'varBindingPattern' ||
-            current.type === 'identifier' ||
-            current.type === 'scoped_identifier') &&
-          current.endIndex <= cut &&
-          current.endIndex >= bestEnd
-        ) {
-          bestEnd = current.endIndex;
-          calleeName = getNodeText(current, this.source).trim();
-        }
-        for (const child of current.children) {
-          if (child) stack.push(child);
-        }
+      let prev: SyntaxNode | null = null;
+      for (const sibling of parent.namedChildren) {
+        if (!sibling) continue;
+        if (sibling.startIndex >= node.startIndex) break;
+        prev = sibling;
       }
+      const calleeName = cangjieCalleeName(prev, this.source);
       if (calleeName) {
         this.unresolvedReferences.push({
           fromNodeId: callerId,

@@ -11078,3 +11078,73 @@ func fmt(x: String): String { return "s" }
     expect(callNames).not.toContain('Cell');
   });
 });
+
+describe('Cangjie call-shape precision', () => {
+  const callNames = (code: string) =>
+    extractFromSource('shapes.cj', code)
+      .unresolvedReferences.filter((r) => r.referenceKind === 'calls')
+      .map((r) => r.referenceName);
+
+  it('should capture paren-less trailing-lambda calls (ArkUI DSL idiom)', () => {
+    const names = callNames(`
+package demo
+
+func ui(list: Array<Int64>): Unit {
+    list.forEach { x => use(x) }
+    Column { Text("hi") }
+}
+`);
+    expect(names).toContain('forEach');
+    expect(names).toContain('Column');
+    expect(names).toContain('Text');
+    expect(names).toContain('use');
+  });
+
+  it('should not double-emit a parenthesized call with a trailing lambda', () => {
+    const names = callNames(`
+package demo
+
+func go(): Unit {
+    runTask(1) { y => handle(y) }
+}
+`);
+    expect(names.filter((n) => n === 'runTask')).toHaveLength(1);
+    expect(names).toContain('handle');
+  });
+
+  it('should stay silent on computed call targets instead of emitting a wrong name', () => {
+    const names = callNames(`
+package demo
+
+func dynamic(handlers: Array<() -> Unit>, idx: Int64, f: (Int64) -> (Int64) -> Unit): Unit {
+    handlers[idx]()
+    f(1)(2)
+    { => quick() }()
+}
+`);
+    expect(names).not.toContain('handlers');
+    expect(names).not.toContain('idx');
+    expect(names.filter((n) => n === 'f')).toHaveLength(1); // f(1) itself IS a call to f
+    expect(names).toContain('quick'); // lambda body still walked
+  });
+
+  it('should link constructor delegation and optional-chain calls', () => {
+    const names = callNames(`
+package demo
+
+class Sub <: Base {
+    init() { this(1) }
+    init(x: Int64) { super(x) }
+}
+
+func opt(cb: Option<() -> Unit>, svc: Option<Service>): Unit {
+    cb?()
+    svc?.start()
+}
+`);
+    expect(names).toContain('init'); // this(1) → own ctor overload
+    expect(names).toContain('cb');
+    expect(names).toContain('start');
+    expect(names).not.toContain('super');
+  });
+});
