@@ -86,7 +86,11 @@ export const cangjieExtractor: LanguageExtractor = {
     if (!params) return undefined;
     const ret = directChild(node, 'returnType');
     const paramsText = getNodeText(params, source);
-    return ret ? `${paramsText}: ${getNodeText(ret, source)}` : paramsText;
+    if (!ret) return paramsText;
+    // The returnType node carries its own leading ':' token — normalize so the
+    // signature reads `(x: Int64): String`, not `(x: Int64): : String`.
+    const retText = getNodeText(ret, source).replace(/^\s*:\s*/, '');
+    return `${paramsText}: ${retText}`;
   },
 
   getVisibility: (node) => {
