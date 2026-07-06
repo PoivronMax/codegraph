@@ -11148,3 +11148,53 @@ func opt(cb: Option<() -> Unit>, svc: Option<Service>): Unit {
     expect(names).not.toContain('super');
   });
 });
+
+describe('Cangjie extend blocks and inheritance', () => {
+  it('should extract extend-block members as methods qualified by the extended type', () => {
+    const code = `
+package demo
+
+extend Widget {
+    func extended(): Unit { helperFromExtend() }
+    static func make(): Widget { return Widget() }
+}
+
+extend String {
+    func shout(): String { return "!" }
+}
+`;
+    const result = extractFromSource('ext.cj', code);
+    const extended = result.nodes.find((n) => n.name === 'extended');
+    expect(extended?.kind).toBe('method');
+    expect(extended?.qualifiedName).toBe('Widget::extended');
+    // built-in type extension: extendType has no identifier child
+    const shout = result.nodes.find((n) => n.name === 'shout');
+    expect(shout?.kind).toBe('method');
+    expect(shout?.qualifiedName).toBe('String::shout');
+    const call = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'helperFromExtend'
+    );
+    expect(call?.fromNodeId).toBe(extended?.id);
+  });
+
+  it('should emit extends/implements edges from <: supertype lists', () => {
+    const code = `
+package demo
+
+class C <: Base & Feature1 & Feature2 {}
+interface I <: J {}
+struct S <: Comparable<S> {}
+extend C <: Feature3 {}
+`;
+    const result = extractFromSource('inh.cj', code);
+    const refs = result.unresolvedReferences
+      .filter((r) => r.referenceKind === 'extends' || r.referenceKind === 'implements')
+      .map((r) => `${r.referenceKind}:${r.referenceName}`);
+    expect(refs).toContain('extends:Base');       // class's first supertype
+    expect(refs).toContain('implements:Feature1'); // rest are conformances
+    expect(refs).toContain('implements:Feature2');
+    expect(refs).toContain('extends:J');           // interface inheritance
+    expect(refs).toContain('implements:Comparable'); // generic supertype, bare name
+    expect(refs).toContain('implements:Feature3');   // extend-block conformance
+  });
+});

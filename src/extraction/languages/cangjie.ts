@@ -109,6 +109,7 @@ const BODY_CHILD_TYPES = [
   'interfaceBody',
   'structBody',
   'enumBody',
+  'extendBody',
 ] as const;
 
 export const cangjieExtractor: LanguageExtractor = {
@@ -117,7 +118,11 @@ export const cangjieExtractor: LanguageExtractor = {
   // isInsideClassLikeNode check). `main() { }` and constructors (`init`) /
   // operator overloads only ever appear at their fixed positions.
   functionTypes: ['functionDefinition', 'mainDefinition'],
-  classTypes: ['classDefinition'],
+  // extendDefinition follows the Swift-extension precedent: `extend Foo {…}`
+  // extracts as a class node NAMED Foo, so its members classify as methods
+  // with `Foo::member` qualified names and calls resolve alongside the
+  // original class's own methods.
+  classTypes: ['classDefinition', 'extendDefinition'],
   methodTypes: ['functionDefinition', 'init', 'operatorFunctionDefinition'],
   interfaceTypes: ['interfaceDefinition'],
   structTypes: ['structDefinition'],
@@ -147,6 +152,16 @@ export const cangjieExtractor: LanguageExtractor = {
     }
     if (node.type === 'mainDefinition') return 'main';
     if (node.type === 'init') return 'init';
+    if (node.type === 'extendDefinition') {
+      // extendType wraps an identifier for user types (`extend Widget`,
+      // `extend Array<T>`), but a BUILT-IN type (`extend String`) is a bare
+      // token — fall back to the extendType text minus any type arguments.
+      const extendType = directChild(node, 'extendType');
+      if (!extendType) return undefined;
+      const id = directChild(extendType, 'identifier');
+      if (id) return getNodeText(id, source);
+      return getNodeText(extendType, source).replace(/<[\s\S]*$/, '').trim() || undefined;
+    }
     if (node.type === 'operatorFunctionDefinition') {
       const op = directChild(node, 'operator');
       return op ? `operator ${getNodeText(op, source)}` : 'operator';

@@ -1,9 +1,12 @@
 # 仓颉 (Cangjie) 语言支持说明
 
 本分支（`cangjie-support`）为 codegraph 增加了华为 HarmonyOS 应用语言仓颉（`.cj`）的索引支持：
-`codegraph init` 会产出仓颉的 function/method/class/interface/struct/enum 节点，以及
-`calls`（调用）、`instantiates`（构造）、`contains`、`imports` 边，写入
-`.codegraph/codegraph.db`。原有全部语言不受影响（完整测试套件 1796 通过 / 0 失败）。
+`codegraph init` 会产出仓颉的 function/method/property/class/interface/struct/enum 节点
+（含 `extend` 扩展块——成员按 Swift extension 先例挂到被扩展类型名下，`Widget::extended`），
+以及 `calls`（调用，含无括号尾随 lambda 的 ArkUI DSL 写法）、`extends`/`implements`
+（`<:` 超类型列表）、`instantiates`（构造）、`contains`、`imports` 边，写入
+`.codegraph/codegraph.db`。原有全部语言不受影响（完整测试套件全部通过，仅上游自带的
+一个 mcp-daemon 时序 flaky 测试偶发，未改动的上游 main 同样复现）。
 
 ## 改动的文件
 

@@ -11,6 +11,7 @@ import {
   Node,
   Edge,
   NodeKind,
+  EdgeKind,
   ExtractionResult,
   ExtractionError,
   UnresolvedReference,
@@ -5189,6 +5190,32 @@ export class TreeSitterExtractor {
    * Extract inheritance relationships
    */
   private extractInheritance(node: SyntaxNode, classId: string): void {
+    // Cangjie: `class C <: Base & I1 & I2` — every supertype is its own
+    // `superOrInterface` child carrying an identifier (generic supertypes:
+    // `Comparable<S>` → identifier "Comparable"). A class's FIRST supertype is
+    // where a superclass may appear → `extends`; the rest — and everything on
+    // structs/enums/extends, which can only conform — are `implements`.
+    // Interface supertypes are interface inheritance → `extends`.
+    if (this.language === 'cangjie') {
+      const supers = node.namedChildren.filter((c) => c?.type === 'superOrInterface');
+      supers.forEach((sup, i) => {
+        const id = sup!.namedChildren.find((c) => c?.type === 'identifier');
+        if (!id) return;
+        const refKind: EdgeKind =
+          node.type === 'interfaceDefinition' || (node.type === 'classDefinition' && i === 0)
+            ? 'extends'
+            : 'implements';
+        this.unresolvedReferences.push({
+          fromNodeId: classId,
+          referenceName: getNodeText(id, this.source),
+          referenceKind: refKind,
+          line: id.startPosition.row + 1,
+          column: id.startPosition.column,
+        });
+      });
+      return;
+    }
+
     // Objective-C @interface MyClass : NSObject <ProtoA, ProtoB>
     if (node.type === 'class_interface') {
       const superclass = getChildByField(node, 'superclass');
