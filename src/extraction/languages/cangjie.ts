@@ -8,17 +8,20 @@ import type { LanguageExtractor } from '../tree-sitter-types';
 // children (funcName/className/…, block/classBody/…), so this extractor works
 // through the resolveName/resolveBody hooks rather than the *Field configs.
 
-/** First DIRECT child of the given type, or null. */
+/** First DIRECT NAMED child of the given type, or null. Named-only matters:
+ * keyword tokens can share a type name with a named node (the `operator`
+ * KEYWORD in `operator func +` is an anonymous token of type 'operator',
+ * while the named 'operator' child carries the actual symbol `+`). */
 function directChild(node: SyntaxNode, type: string): SyntaxNode | null {
-  for (const child of node.children) {
+  for (const child of node.namedChildren) {
     if (child && child.type === type) return child;
   }
   return null;
 }
 
-/** First DIRECT child among the given types, or null. */
+/** First DIRECT NAMED child among the given types, or null. */
 function directChildOf(node: SyntaxNode, types: readonly string[]): SyntaxNode | null {
-  for (const child of node.children) {
+  for (const child of node.namedChildren) {
     if (child && types.includes(child.type)) return child;
   }
   return null;
@@ -59,7 +62,10 @@ export const cangjieExtractor: LanguageExtractor = {
   // extraction is a cangjie branch in extractCall — see tree-sitter.ts.
   callTypes: ['callSuffix'],
   variableTypes: [],
-  propertyTypes: ['propertyDefinition'],
+  // propertyDefinition is handled entirely by the visitNode hook below (the
+  // core's extractProperty neither finds `propertyName` nor visits the
+  // getter/setter blocks, so accessor-body calls would be dropped).
+  propertyTypes: [],
   nameField: 'name', // unused — the grammar has no fields; resolveName does the work
   bodyField: 'block',
   paramsField: 'parameters',
@@ -80,6 +86,27 @@ export const cangjieExtractor: LanguageExtractor = {
   },
 
   resolveBody: (node) => directChildOf(node, BODY_CHILD_TYPES),
+
+  // `prop name: T { get() {...} set(v) {...} }` — create the property node and
+  // walk BOTH accessor blocks as its body so getter/setter calls become edges.
+  visitNode: (node, ctx) => {
+    if (node.type !== 'propertyDefinition') return false;
+    const nameNode = directChild(node, 'propertyName');
+    if (!nameNode) return false;
+    const prop = ctx.createNode('property', getNodeText(nameNode, ctx.source), node);
+    if (prop) {
+      // visitFunctionBody attributes calls to the top of the scope stack, not
+      // to its functionId argument — push the property before walking.
+      ctx.pushScope(prop.id);
+      for (const child of node.namedChildren) {
+        if (child && child.type === 'block') {
+          ctx.visitFunctionBody(child, prop.id);
+        }
+      }
+      ctx.popScope();
+    }
+    return true;
+  },
 
   getSignature: (node, source) => {
     const params = directChild(node, 'parameterList') ?? directChild(node, 'primaryInitParamList');

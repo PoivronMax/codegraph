@@ -11015,3 +11015,66 @@ func after(): Unit {
     });
   });
 });
+
+describe('Cangjie properties and operators', () => {
+  it('should name a prop by propertyName and capture accessor-body calls', () => {
+    const code = `
+package demo
+
+class W {
+    mut prop value: Int64 {
+        get() { loadValue() }
+        set(v) { storeValue(v) }
+    }
+}
+`;
+    const result = extractFromSource('prop.cj', code);
+    const prop = result.nodes.find((n) => n.kind === 'property');
+    expect(prop?.name).toBe('value');
+    const propCalls = result.unresolvedReferences.filter(
+      (r) => r.referenceKind === 'calls' && r.fromNodeId === prop?.id
+    );
+    expect(propCalls.map((r) => r.referenceName).sort()).toEqual(['loadValue', 'storeValue']);
+  });
+
+  it('should name operator functions by their symbol, not the keyword', () => {
+    const code = `
+package demo
+
+struct Vec {
+    public operator func +(rhs: Vec): Vec {
+        return makeVec(1)
+    }
+}
+`;
+    const result = extractFromSource('vec.cj', code);
+    const op = result.nodes.find((n) => n.kind === 'method');
+    expect(op?.name).toBe('operator +');
+    const call = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'makeVec'
+    );
+    expect(call?.fromNodeId).toBe(op?.id);
+  });
+
+  it('should keep both overloads and not fake calls from enum payload cases', () => {
+    const code = `
+package demo
+
+enum Shape {
+    | Cell(Int64)
+
+    func area(): Int64 { return computeArea() }
+}
+
+func fmt(x: Int64): String { return "i" }
+func fmt(x: String): String { return "s" }
+`;
+    const result = extractFromSource('enum.cj', code);
+    expect(result.nodes.filter((n) => n.name === 'fmt')).toHaveLength(2);
+    const callNames = result.unresolvedReferences
+      .filter((r) => r.referenceKind === 'calls')
+      .map((r) => r.referenceName);
+    expect(callNames).toContain('computeArea');
+    expect(callNames).not.toContain('Cell');
+  });
+});
