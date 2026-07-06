@@ -10845,3 +10845,173 @@ import DataStore from '../data/DataStore';
     });
   });
 });
+
+describe('Cangjie Extraction', () => {
+  describe('Language detection', () => {
+    it('should detect Cangjie files', () => {
+      expect(detectLanguage('main.cj')).toBe('cangjie');
+      expect(detectLanguage('Modules/wallet/src/store.cj')).toBe('cangjie');
+    });
+
+    it('should report Cangjie as supported', () => {
+      expect(isLanguageSupported('cangjie')).toBe(true);
+      expect(getSupportedLanguages()).toContain('cangjie');
+    });
+  });
+
+  describe('Symbol extraction', () => {
+    it('should extract top-level functions with trailing return types', () => {
+      const code = `
+package demo
+
+func topLevel(x: Int64): String {
+    return "v"
+}
+`;
+      const result = extractFromSource('main.cj', code);
+      const fn = result.nodes.find((n) => n.name === 'topLevel');
+      expect(fn).toBeDefined();
+      expect(fn?.kind).toBe('function');
+      expect(fn?.language).toBe('cangjie');
+      expect(fn?.signature).toContain('x: Int64');
+    });
+
+    it('should extract classes with <: supertypes, methods, and init constructors', () => {
+      const code = `
+package demo
+
+public class Greeter <: ToString {
+    let name: String
+    public init(name: String) { this.name = name }
+    public func greet(times: Int64): String {
+        return makeLine(times)
+    }
+    private static func makeLine(i: Int64): String { return "x" }
+}
+`;
+      const result = extractFromSource('greeter.cj', code);
+      const cls = result.nodes.find((n) => n.name === 'Greeter');
+      expect(cls?.kind).toBe('class');
+      const greet = result.nodes.find((n) => n.name === 'greet');
+      expect(greet?.kind).toBe('method');
+      expect(greet?.visibility).toBe('public');
+      const init = result.nodes.find((n) => n.name === 'init');
+      expect(init?.kind).toBe('method');
+      const makeLine = result.nodes.find((n) => n.name === 'makeLine');
+      expect(makeLine?.kind).toBe('method');
+      expect(makeLine?.visibility).toBe('private');
+    });
+
+    it('should extract interface, struct, and enum definitions', () => {
+      const code = `
+package demo
+
+interface Shape {
+    func area(): Float64
+}
+
+struct Point {
+    let x: Int64
+    let y: Int64
+}
+
+enum Color {
+    | Red
+    | Green
+}
+`;
+      const result = extractFromSource('types.cj', code);
+      expect(result.nodes.find((n) => n.name === 'Shape')?.kind).toBe('interface');
+      expect(result.nodes.find((n) => n.name === 'Point')?.kind).toBe('struct');
+      expect(result.nodes.find((n) => n.name === 'Color')?.kind).toBe('enum');
+    });
+
+    it('should extract main as a function', () => {
+      const code = `
+main() {
+    println("hi")
+}
+`;
+      const result = extractFromSource('app.cj', code);
+      const m = result.nodes.find((n) => n.name === 'main');
+      expect(m?.kind).toBe('function');
+    });
+
+    it('should record imports', () => {
+      const code = `
+package demo
+
+import std.collection.*
+import ohos.base.AppLog
+`;
+      const result = extractFromSource('imports.cj', code);
+      const names = result.nodes.filter((n) => n.kind === 'import').map((n) => n.name);
+      expect(names).toContain('std.collection');
+      expect(names).toContain('ohos.base');
+    });
+  });
+
+  describe('Call extraction', () => {
+    it('should extract bare and dotted call references with the enclosing caller', () => {
+      const code = `
+package demo
+
+func helper(): Unit {}
+
+func caller(g: Greeter): Unit {
+    helper()
+    g.greet(3)
+}
+`;
+      const result = extractFromSource('calls.cj', code);
+      const calls = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls');
+      const names = calls.map((r) => r.referenceName);
+      expect(names).toContain('helper');
+      expect(names).toContain('greet');
+      const callerId = result.nodes.find((n) => n.name === 'caller')?.id;
+      expect(calls.every((r) => r.fromNodeId === callerId)).toBe(true);
+    });
+
+    it('should attribute method-body calls to the method, not the class', () => {
+      const code = `
+package demo
+
+class Store {
+    func load(): Unit {
+        fetch()
+    }
+}
+`;
+      const result = extractFromSource('store.cj', code);
+      const call = result.unresolvedReferences.find(
+        (r) => r.referenceKind === 'calls' && r.referenceName === 'fetch'
+      );
+      expect(call).toBeDefined();
+      const load = result.nodes.find((n) => n.name === 'load');
+      expect(call?.fromNodeId).toBe(load?.id);
+    });
+
+    it('should parse multi-line raw strings without breaking extraction (C scanner port)', () => {
+      const code = `
+package demo
+
+func rawUser(): String {
+    let raw = ##"contains "quotes" and
+newlines"##
+    return raw
+}
+
+func after(): Unit {
+    rawUser()
+}
+`;
+      const result = extractFromSource('raw.cj', code);
+      expect(result.nodes.find((n) => n.name === 'rawUser')).toBeDefined();
+      expect(result.nodes.find((n) => n.name === 'after')).toBeDefined();
+      const call = result.unresolvedReferences.find(
+        (r) => r.referenceKind === 'calls' && r.referenceName === 'rawUser'
+      );
+      expect(call).toBeDefined();
+    });
+  });
+});

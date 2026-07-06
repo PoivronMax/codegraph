@@ -1810,7 +1810,9 @@ export class TreeSitterExtractor {
     // Skip forward declarations and type references (no body = not a definition)
     // — EXCEPT C# positional records (`record struct M(decimal Amount);`),
     // complete definitions with no body block. (#831)
-    const body = getChildByField(node, this.extractor.bodyField);
+    // resolveBody first: a grammar with no fields (Cangjie) finds structBody there.
+    const body = this.extractor.resolveBody?.(node, this.extractor.bodyField)
+      ?? getChildByField(node, this.extractor.bodyField);
     if (!body && node.type !== 'record_declaration') return;
 
     const name = extractName(node, this.source, this.extractor);
@@ -3624,6 +3626,48 @@ export class TreeSitterExtractor {
 
     const callerId = this.nodeStack[this.nodeStack.length - 1];
     if (!callerId) return;
+
+    // Cangjie: a call site is a `callSuffix` (the `(args)` part) hanging off a
+    // `postfixExpression` — the grammar has no `function` field and the callee
+    // name is not the suffix's sibling but the rightmost name-leaf that ends
+    // at or before the suffix's start: `foo(` → foo, `obj.method(` → method.
+    // Name leaves here are `varBindingPattern` (this grammar wraps most name
+    // uses in it) plus bare `identifier`/`scoped_identifier`.
+    if (this.language === 'cangjie') {
+      if (node.type !== 'callSuffix') return;
+      const parent = node.parent;
+      if (!parent) return;
+      const cut = node.startIndex;
+      let bestEnd = -1;
+      let calleeName: string | undefined;
+      const stack: SyntaxNode[] = [parent];
+      while (stack.length > 0) {
+        const current = stack.pop()!;
+        if (
+          (current.type === 'varBindingPattern' ||
+            current.type === 'identifier' ||
+            current.type === 'scoped_identifier') &&
+          current.endIndex <= cut &&
+          current.endIndex >= bestEnd
+        ) {
+          bestEnd = current.endIndex;
+          calleeName = getNodeText(current, this.source).trim();
+        }
+        for (const child of current.children) {
+          if (child) stack.push(child);
+        }
+      }
+      if (calleeName) {
+        this.unresolvedReferences.push({
+          fromNodeId: callerId,
+          referenceName: calleeName,
+          referenceKind: 'calls',
+          line: node.startPosition.row + 1,
+          column: node.startPosition.column,
+        });
+      }
+      return;
+    }
 
     // VB.NET: `foo(args)` is syntactically ambiguous between a call and an
     // index read, so the grammar parses non-empty parens as

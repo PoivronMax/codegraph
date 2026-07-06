@@ -1,0 +1,9710 @@
+[
+  {
+    "type": "annotation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "annotationArgument",
+          "named": true
+        },
+        {
+          "type": "annotationName",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "annotationArgument",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parameter",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "annotationName",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "arrayLiteral",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "arrayType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "typeArguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "arrowType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "assignmentExpression",
+    "named": true,
+    "fields": {
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "%=",
+            "named": false
+          },
+          {
+            "type": "&&=",
+            "named": false
+          },
+          {
+            "type": "&=",
+            "named": false
+          },
+          {
+            "type": "**=",
+            "named": false
+          },
+          {
+            "type": "*=",
+            "named": false
+          },
+          {
+            "type": "+=",
+            "named": false
+          },
+          {
+            "type": "-=",
+            "named": false
+          },
+          {
+            "type": "/=",
+            "named": false
+          },
+          {
+            "type": "<<=",
+            "named": false
+          },
+          {
+            "type": "=",
+            "named": false
+          },
+          {
+            "type": ">>=",
+            "named": false
+          },
+          {
+            "type": "^=",
+            "named": false
+          },
+          {
+            "type": "|=",
+            "named": false
+          },
+          {
+            "type": "||=",
+            "named": false
+          }
+        ]
+      },
+      "value": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "variable": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "asterisk",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "atomicVariable",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "typeArguments",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "binaryExpreesion",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "!=",
+            "named": false
+          },
+          {
+            "type": "%",
+            "named": false
+          },
+          {
+            "type": "&",
+            "named": false
+          },
+          {
+            "type": "&&",
+            "named": false
+          },
+          {
+            "type": "*",
+            "named": false
+          },
+          {
+            "type": "**",
+            "named": false
+          },
+          {
+            "type": "+",
+            "named": false
+          },
+          {
+            "type": "-",
+            "named": false
+          },
+          {
+            "type": "/",
+            "named": false
+          },
+          {
+            "type": "<",
+            "named": false
+          },
+          {
+            "type": "<<",
+            "named": false
+          },
+          {
+            "type": "<=",
+            "named": false
+          },
+          {
+            "type": "==",
+            "named": false
+          },
+          {
+            "type": ">",
+            "named": false
+          },
+          {
+            "type": ">=",
+            "named": false
+          },
+          {
+            "type": ">>",
+            "named": false
+          },
+          {
+            "type": "??",
+            "named": false
+          },
+          {
+            "type": "^",
+            "named": false
+          },
+          {
+            "type": "as",
+            "named": false
+          },
+          {
+            "type": "is",
+            "named": false
+          },
+          {
+            "type": "|",
+            "named": false
+          },
+          {
+            "type": "|>",
+            "named": false
+          },
+          {
+            "type": "||",
+            "named": false
+          },
+          {
+            "type": "~>",
+            "named": false
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "callSuffix",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "catchPattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "classBody",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "finalizer",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "init",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "operatorFunctionDefinition",
+          "named": true
+        },
+        {
+          "type": "primaryInit",
+          "named": true
+        },
+        {
+          "type": "propertyDefinition",
+          "named": true
+        },
+        {
+          "type": "staticInit",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "classDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "classBody",
+          "named": true
+        },
+        {
+          "type": "className",
+          "named": true
+        },
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "superOrInterface",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "constantPattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "doWhileExpression",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "enumBody",
+    "named": true,
+    "fields": {
+      "enumConstant": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": ",",
+            "named": false
+          },
+          {
+            "type": "Bool",
+            "named": true
+          },
+          {
+            "type": "Float16",
+            "named": true
+          },
+          {
+            "type": "Float32",
+            "named": true
+          },
+          {
+            "type": "Float64",
+            "named": true
+          },
+          {
+            "type": "Int16",
+            "named": true
+          },
+          {
+            "type": "Int32",
+            "named": true
+          },
+          {
+            "type": "Int64",
+            "named": true
+          },
+          {
+            "type": "Int8",
+            "named": true
+          },
+          {
+            "type": "IntNative",
+            "named": true
+          },
+          {
+            "type": "Nothing",
+            "named": true
+          },
+          {
+            "type": "Rune",
+            "named": true
+          },
+          {
+            "type": "String",
+            "named": true
+          },
+          {
+            "type": "Thistype",
+            "named": true
+          },
+          {
+            "type": "UInt16",
+            "named": true
+          },
+          {
+            "type": "UInt32",
+            "named": true
+          },
+          {
+            "type": "UInt64",
+            "named": true
+          },
+          {
+            "type": "UInt8",
+            "named": true
+          },
+          {
+            "type": "UIntNative",
+            "named": true
+          },
+          {
+            "type": "Unit",
+            "named": true
+          },
+          {
+            "type": "arrayType",
+            "named": true
+          },
+          {
+            "type": "arrowType",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "prefixType",
+            "named": true
+          },
+          {
+            "type": "rangeType",
+            "named": true
+          },
+          {
+            "type": "tupleType",
+            "named": true
+          },
+          {
+            "type": "userType",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "operatorFunctionDefinition",
+          "named": true
+        },
+        {
+          "type": "propertyDefinition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "enumDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "enumBody",
+          "named": true
+        },
+        {
+          "type": "enumName",
+          "named": true
+        },
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "superOrInterface",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "enumPattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "scoped_identifier",
+          "named": true
+        },
+        {
+          "type": "tuplePattern",
+          "named": true
+        },
+        {
+          "type": "typeArguments",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "extendBody",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "operatorFunctionDefinition",
+          "named": true
+        },
+        {
+          "type": "propertyDefinition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "extendDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "extendBody",
+          "named": true
+        },
+        {
+          "type": "extendType",
+          "named": true
+        },
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "superOrInterface",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "extendType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "scoped_identifier",
+          "named": true
+        },
+        {
+          "type": "typeArguments",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "fieldAccess",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "atomicVariable",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "finalizer",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "forInExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "enumPattern",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "patternGuard",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "tuplePattern",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "foreignBody",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "classDefinition",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "interfaceDefinition",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "foreignDeclaration",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "classDefinition",
+          "named": true
+        },
+        {
+          "type": "foreignBody",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "interfaceDefinition",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "functionDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "funcName",
+          "named": true
+        },
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "parameterList",
+          "named": true
+        },
+        {
+          "type": "returnType",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "genericConstraint",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "genericConstraints",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "genericConstraint",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ifExpression",
+    "named": true,
+    "fields": {
+      "alternative": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "else",
+            "named": false
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          }
+        ]
+      },
+      "condition": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "<-",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "enumPattern",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": false
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "tuplePattern",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "varBindingPattern",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          },
+          {
+            "type": "wildcardPattern",
+            "named": true
+          }
+        ]
+      },
+      "consequence": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "importList",
+    "named": true,
+    "fields": {
+      "packageName": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "packageAlias",
+          "named": true
+        },
+        {
+          "type": "packageFull",
+          "named": true
+        },
+        {
+          "type": "packageGroup",
+          "named": true
+        },
+        {
+          "type": "subGroupOfPackage",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "inMultiLineStringExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "incOrDec",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "indexAccess",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "init",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "parameterList",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "inlineExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "interfaceBody",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "interfaceBody",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "operatorFunctionDefinition",
+          "named": true
+        },
+        {
+          "type": "propertyDefinition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "interfaceDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "interfaceBody",
+          "named": true
+        },
+        {
+          "type": "interfaceName",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "superOrInterface",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "jumpExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lambdaExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaParameters",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lambdaParameter",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lambdaParameters",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "lambdaParameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "macroDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "macroName",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "macroExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "macroName",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "macroPackageDeclaration",
+    "named": true,
+    "fields": {
+      "packageName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "mainDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "parameterList",
+          "named": true
+        },
+        {
+          "type": "returnType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "matchCase",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "constantPattern",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "enumPattern",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "patternGuard",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "tuplePattern",
+          "named": true
+        },
+        {
+          "type": "typePattern",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "matchCaseBody",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "matchExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchCase",
+          "named": true
+        },
+        {
+          "type": "matchCaseBody",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "modifiers",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "namedMemeberParam",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "namedParameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "namedParameter",
+    "named": true,
+    "fields": {
+      "defaultValue": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "paraName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "Bool",
+            "named": true
+          },
+          {
+            "type": "Float16",
+            "named": true
+          },
+          {
+            "type": "Float32",
+            "named": true
+          },
+          {
+            "type": "Float64",
+            "named": true
+          },
+          {
+            "type": "Int16",
+            "named": true
+          },
+          {
+            "type": "Int32",
+            "named": true
+          },
+          {
+            "type": "Int64",
+            "named": true
+          },
+          {
+            "type": "Int8",
+            "named": true
+          },
+          {
+            "type": "IntNative",
+            "named": true
+          },
+          {
+            "type": "Nothing",
+            "named": true
+          },
+          {
+            "type": "Rune",
+            "named": true
+          },
+          {
+            "type": "String",
+            "named": true
+          },
+          {
+            "type": "Thistype",
+            "named": true
+          },
+          {
+            "type": "UInt16",
+            "named": true
+          },
+          {
+            "type": "UInt32",
+            "named": true
+          },
+          {
+            "type": "UInt64",
+            "named": true
+          },
+          {
+            "type": "UInt8",
+            "named": true
+          },
+          {
+            "type": "UIntNative",
+            "named": true
+          },
+          {
+            "type": "Unit",
+            "named": true
+          },
+          {
+            "type": "arrayType",
+            "named": true
+          },
+          {
+            "type": "arrowType",
+            "named": true
+          },
+          {
+            "type": "prefixType",
+            "named": true
+          },
+          {
+            "type": "rangeType",
+            "named": true
+          },
+          {
+            "type": "tupleType",
+            "named": true
+          },
+          {
+            "type": "userType",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "operatorFunctionDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "parameterList",
+          "named": true
+        },
+        {
+          "type": "returnType",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "packageAlias",
+    "named": true,
+    "fields": {
+      "alias": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "packageName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "packageDeclaration",
+    "named": true,
+    "fields": {
+      "packageName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "packageFull",
+    "named": true,
+    "fields": {
+      "packageName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "asterisk",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "packageGroup",
+    "named": true,
+    "fields": {
+      "packageName": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "packageAlias",
+          "named": true
+        },
+        {
+          "type": "packageFull",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "parameter",
+    "named": true,
+    "fields": {
+      "paraName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_",
+            "named": false
+          },
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "Bool",
+            "named": true
+          },
+          {
+            "type": "Float16",
+            "named": true
+          },
+          {
+            "type": "Float32",
+            "named": true
+          },
+          {
+            "type": "Float64",
+            "named": true
+          },
+          {
+            "type": "Int16",
+            "named": true
+          },
+          {
+            "type": "Int32",
+            "named": true
+          },
+          {
+            "type": "Int64",
+            "named": true
+          },
+          {
+            "type": "Int8",
+            "named": true
+          },
+          {
+            "type": "IntNative",
+            "named": true
+          },
+          {
+            "type": "Nothing",
+            "named": true
+          },
+          {
+            "type": "Rune",
+            "named": true
+          },
+          {
+            "type": "String",
+            "named": true
+          },
+          {
+            "type": "Thistype",
+            "named": true
+          },
+          {
+            "type": "UInt16",
+            "named": true
+          },
+          {
+            "type": "UInt32",
+            "named": true
+          },
+          {
+            "type": "UInt64",
+            "named": true
+          },
+          {
+            "type": "UInt8",
+            "named": true
+          },
+          {
+            "type": "UIntNative",
+            "named": true
+          },
+          {
+            "type": "Unit",
+            "named": true
+          },
+          {
+            "type": "arrayType",
+            "named": true
+          },
+          {
+            "type": "arrowType",
+            "named": true
+          },
+          {
+            "type": "prefixType",
+            "named": true
+          },
+          {
+            "type": "rangeType",
+            "named": true
+          },
+          {
+            "type": "tupleType",
+            "named": true
+          },
+          {
+            "type": "userType",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "parameterList",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "namedParameter",
+          "named": true
+        },
+        {
+          "type": "parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "parenthesizedExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "patternGuard",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "postfixExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "callSuffix",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "fieldAccess",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "incOrDec",
+          "named": true
+        },
+        {
+          "type": "indexAccess",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "questAccess",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "trailingLambdaExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "prefixType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "primaryInit",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "callSuffix",
+          "named": true
+        },
+        {
+          "type": "className",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "primaryInitParamList",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "primaryInitParamList",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "namedMemeberParam",
+          "named": true
+        },
+        {
+          "type": "namedParameter",
+          "named": true
+        },
+        {
+          "type": "parameter",
+          "named": true
+        },
+        {
+          "type": "unnamedMemberParam",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "propertyDefinition",
+    "named": true,
+    "fields": {
+      "getter": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "get",
+            "named": false
+          }
+        ]
+      },
+      "setter": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "set",
+            "named": false
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "Bool",
+            "named": true
+          },
+          {
+            "type": "Float16",
+            "named": true
+          },
+          {
+            "type": "Float32",
+            "named": true
+          },
+          {
+            "type": "Float64",
+            "named": true
+          },
+          {
+            "type": "Int16",
+            "named": true
+          },
+          {
+            "type": "Int32",
+            "named": true
+          },
+          {
+            "type": "Int64",
+            "named": true
+          },
+          {
+            "type": "Int8",
+            "named": true
+          },
+          {
+            "type": "IntNative",
+            "named": true
+          },
+          {
+            "type": "Nothing",
+            "named": true
+          },
+          {
+            "type": "Rune",
+            "named": true
+          },
+          {
+            "type": "String",
+            "named": true
+          },
+          {
+            "type": "Thistype",
+            "named": true
+          },
+          {
+            "type": "UInt16",
+            "named": true
+          },
+          {
+            "type": "UInt32",
+            "named": true
+          },
+          {
+            "type": "UInt64",
+            "named": true
+          },
+          {
+            "type": "UInt8",
+            "named": true
+          },
+          {
+            "type": "UIntNative",
+            "named": true
+          },
+          {
+            "type": "Unit",
+            "named": true
+          },
+          {
+            "type": "arrayType",
+            "named": true
+          },
+          {
+            "type": "arrowType",
+            "named": true
+          },
+          {
+            "type": "prefixType",
+            "named": true
+          },
+          {
+            "type": "rangeType",
+            "named": true
+          },
+          {
+            "type": "tupleType",
+            "named": true
+          },
+          {
+            "type": "userType",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "propertyName",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "questAccess",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "quoteExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rangeExpression",
+    "named": true,
+    "fields": {
+      "end": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "start": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "step": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "rangeType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "typeArguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "resourceSpecification",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "resourceSpecifications",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "resourceSpecification",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "returnType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "scoped_identifier",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "scope": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "spawnExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "trailingLambdaExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "staticInit",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "stringLiteral",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "inMultiLineStringExpression",
+          "named": true
+        },
+        {
+          "type": "inlineExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "structBody",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "init",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "operatorFunctionDefinition",
+          "named": true
+        },
+        {
+          "type": "primaryInit",
+          "named": true
+        },
+        {
+          "type": "propertyDefinition",
+          "named": true
+        },
+        {
+          "type": "staticInit",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "structDefinition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "genericConstraints",
+          "named": true
+        },
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "structBody",
+          "named": true
+        },
+        {
+          "type": "structName",
+          "named": true
+        },
+        {
+          "type": "superOrInterface",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "subGroupOfPackage",
+    "named": true,
+    "fields": {
+      "packageName": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "packageGroup",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "superOrInterface",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "scoped_identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "synchronizedExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "thisSuperExpression",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "trailingLambdaExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "assignmentExpression",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaParameters",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "translationUnit",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "classDefinition",
+          "named": true
+        },
+        {
+          "type": "enumDefinition",
+          "named": true
+        },
+        {
+          "type": "extendDefinition",
+          "named": true
+        },
+        {
+          "type": "foreignDeclaration",
+          "named": true
+        },
+        {
+          "type": "functionDefinition",
+          "named": true
+        },
+        {
+          "type": "importList",
+          "named": true
+        },
+        {
+          "type": "interfaceDefinition",
+          "named": true
+        },
+        {
+          "type": "macroDefinition",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "macroPackageDeclaration",
+          "named": true
+        },
+        {
+          "type": "mainDefinition",
+          "named": true
+        },
+        {
+          "type": "packageDeclaration",
+          "named": true
+        },
+        {
+          "type": "structDefinition",
+          "named": true
+        },
+        {
+          "type": "typeAlias",
+          "named": true
+        },
+        {
+          "type": "variableDeclaration",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tryExpression",
+    "named": true,
+    "fields": {
+      "catch_body": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      },
+      "finally_body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      },
+      "try_body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "catchPattern",
+          "named": true
+        },
+        {
+          "type": "resourceSpecifications",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tupleExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tuplePattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "constantPattern",
+          "named": true
+        },
+        {
+          "type": "enumPattern",
+          "named": true
+        },
+        {
+          "type": "tuplePattern",
+          "named": true
+        },
+        {
+          "type": "typePattern",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tupleType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "typeAlias",
+    "named": true,
+    "fields": {
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "Bool",
+            "named": true
+          },
+          {
+            "type": "Float16",
+            "named": true
+          },
+          {
+            "type": "Float32",
+            "named": true
+          },
+          {
+            "type": "Float64",
+            "named": true
+          },
+          {
+            "type": "Int16",
+            "named": true
+          },
+          {
+            "type": "Int32",
+            "named": true
+          },
+          {
+            "type": "Int64",
+            "named": true
+          },
+          {
+            "type": "Int8",
+            "named": true
+          },
+          {
+            "type": "IntNative",
+            "named": true
+          },
+          {
+            "type": "Nothing",
+            "named": true
+          },
+          {
+            "type": "Rune",
+            "named": true
+          },
+          {
+            "type": "String",
+            "named": true
+          },
+          {
+            "type": "Thistype",
+            "named": true
+          },
+          {
+            "type": "UInt16",
+            "named": true
+          },
+          {
+            "type": "UInt32",
+            "named": true
+          },
+          {
+            "type": "UInt64",
+            "named": true
+          },
+          {
+            "type": "UInt8",
+            "named": true
+          },
+          {
+            "type": "UIntNative",
+            "named": true
+          },
+          {
+            "type": "Unit",
+            "named": true
+          },
+          {
+            "type": "arrayType",
+            "named": true
+          },
+          {
+            "type": "arrowType",
+            "named": true
+          },
+          {
+            "type": "prefixType",
+            "named": true
+          },
+          {
+            "type": "rangeType",
+            "named": true
+          },
+          {
+            "type": "tupleType",
+            "named": true
+          },
+          {
+            "type": "userType",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "typeAliasName",
+          "named": true
+        },
+        {
+          "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "typeArguments",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "typeParameters",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "typePattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "Bool",
+          "named": true
+        },
+        {
+          "type": "Float16",
+          "named": true
+        },
+        {
+          "type": "Float32",
+          "named": true
+        },
+        {
+          "type": "Float64",
+          "named": true
+        },
+        {
+          "type": "Int16",
+          "named": true
+        },
+        {
+          "type": "Int32",
+          "named": true
+        },
+        {
+          "type": "Int64",
+          "named": true
+        },
+        {
+          "type": "Int8",
+          "named": true
+        },
+        {
+          "type": "IntNative",
+          "named": true
+        },
+        {
+          "type": "Nothing",
+          "named": true
+        },
+        {
+          "type": "Rune",
+          "named": true
+        },
+        {
+          "type": "String",
+          "named": true
+        },
+        {
+          "type": "Thistype",
+          "named": true
+        },
+        {
+          "type": "UInt16",
+          "named": true
+        },
+        {
+          "type": "UInt32",
+          "named": true
+        },
+        {
+          "type": "UInt64",
+          "named": true
+        },
+        {
+          "type": "UInt8",
+          "named": true
+        },
+        {
+          "type": "UIntNative",
+          "named": true
+        },
+        {
+          "type": "Unit",
+          "named": true
+        },
+        {
+          "type": "arrayType",
+          "named": true
+        },
+        {
+          "type": "arrowType",
+          "named": true
+        },
+        {
+          "type": "prefixType",
+          "named": true
+        },
+        {
+          "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "tupleType",
+          "named": true
+        },
+        {
+          "type": "userType",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "unaryExpression",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "!",
+            "named": false
+          },
+          {
+            "type": "-",
+            "named": false
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "unitLiteral",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "unnamedMemberParam",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "unsafeExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "userType",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "scoped_identifier",
+          "named": true
+        },
+        {
+          "type": "typeArguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "varBindingPattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "variableDeclaration",
+    "named": true,
+    "fields": {
+      "initilizer": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "$",
+            "named": false
+          },
+          {
+            "type": "$(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "arrayLiteral",
+            "named": true
+          },
+          {
+            "type": "atomicVariable",
+            "named": true
+          },
+          {
+            "type": "binaryExpreesion",
+            "named": true
+          },
+          {
+            "type": "booleanLiteral",
+            "named": true
+          },
+          {
+            "type": "byteLiteral",
+            "named": true
+          },
+          {
+            "type": "doWhileExpression",
+            "named": true
+          },
+          {
+            "type": "floatLiteral",
+            "named": true
+          },
+          {
+            "type": "forInExpression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "ifExpression",
+            "named": true
+          },
+          {
+            "type": "integerLiteral",
+            "named": true
+          },
+          {
+            "type": "jumpExpression",
+            "named": true
+          },
+          {
+            "type": "lambdaExpression",
+            "named": true
+          },
+          {
+            "type": "macroExpression",
+            "named": true
+          },
+          {
+            "type": "matchExpression",
+            "named": true
+          },
+          {
+            "type": "parenthesizedExpression",
+            "named": true
+          },
+          {
+            "type": "postfixExpression",
+            "named": true
+          },
+          {
+            "type": "quoteExpression",
+            "named": true
+          },
+          {
+            "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "runeLiteral",
+            "named": true
+          },
+          {
+            "type": "spawnExpression",
+            "named": true
+          },
+          {
+            "type": "stringLiteral",
+            "named": true
+          },
+          {
+            "type": "synchronizedExpression",
+            "named": true
+          },
+          {
+            "type": "thisSuperExpression",
+            "named": true
+          },
+          {
+            "type": "tryExpression",
+            "named": true
+          },
+          {
+            "type": "tupleExpression",
+            "named": true
+          },
+          {
+            "type": "unaryExpression",
+            "named": true
+          },
+          {
+            "type": "unitLiteral",
+            "named": true
+          },
+          {
+            "type": "unsafeExpression",
+            "named": true
+          },
+          {
+            "type": "whileExpression",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "Bool",
+            "named": true
+          },
+          {
+            "type": "Float16",
+            "named": true
+          },
+          {
+            "type": "Float32",
+            "named": true
+          },
+          {
+            "type": "Float64",
+            "named": true
+          },
+          {
+            "type": "Int16",
+            "named": true
+          },
+          {
+            "type": "Int32",
+            "named": true
+          },
+          {
+            "type": "Int64",
+            "named": true
+          },
+          {
+            "type": "Int8",
+            "named": true
+          },
+          {
+            "type": "IntNative",
+            "named": true
+          },
+          {
+            "type": "Nothing",
+            "named": true
+          },
+          {
+            "type": "Rune",
+            "named": true
+          },
+          {
+            "type": "String",
+            "named": true
+          },
+          {
+            "type": "Thistype",
+            "named": true
+          },
+          {
+            "type": "UInt16",
+            "named": true
+          },
+          {
+            "type": "UInt32",
+            "named": true
+          },
+          {
+            "type": "UInt64",
+            "named": true
+          },
+          {
+            "type": "UInt8",
+            "named": true
+          },
+          {
+            "type": "UIntNative",
+            "named": true
+          },
+          {
+            "type": "Unit",
+            "named": true
+          },
+          {
+            "type": "arrayType",
+            "named": true
+          },
+          {
+            "type": "arrowType",
+            "named": true
+          },
+          {
+            "type": "prefixType",
+            "named": true
+          },
+          {
+            "type": "rangeType",
+            "named": true
+          },
+          {
+            "type": "tupleType",
+            "named": true
+          },
+          {
+            "type": "userType",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "modifiers",
+          "named": true
+        },
+        {
+          "type": "variableName",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "variableName",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "enumPattern",
+          "named": true
+        },
+        {
+          "type": "tuplePattern",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "whileExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpreesion",
+          "named": true
+        },
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "constantPattern",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "enumPattern",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "tuplePattern",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "varBindingPattern",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        },
+        {
+          "type": "wildcardPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "wildcardPattern",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "!",
+    "named": false
+  },
+  {
+    "type": "!=",
+    "named": false
+  },
+  {
+    "type": "\"",
+    "named": false
+  },
+  {
+    "type": "\"\"\"",
+    "named": false
+  },
+  {
+    "type": "$",
+    "named": false
+  },
+  {
+    "type": "$(",
+    "named": false
+  },
+  {
+    "type": "${",
+    "named": false
+  },
+  {
+    "type": "%",
+    "named": false
+  },
+  {
+    "type": "%=",
+    "named": false
+  },
+  {
+    "type": "&",
+    "named": false
+  },
+  {
+    "type": "&&",
+    "named": false
+  },
+  {
+    "type": "&&=",
+    "named": false
+  },
+  {
+    "type": "&=",
+    "named": false
+  },
+  {
+    "type": "'",
+    "named": false
+  },
+  {
+    "type": "'''",
+    "named": false
+  },
+  {
+    "type": "(",
+    "named": false
+  },
+  {
+    "type": ")",
+    "named": false
+  },
+  {
+    "type": "*",
+    "named": false
+  },
+  {
+    "type": "**",
+    "named": false
+  },
+  {
+    "type": "**=",
+    "named": false
+  },
+  {
+    "type": "*=",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
+    "type": "++",
+    "named": false
+  },
+  {
+    "type": "+=",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": "-",
+    "named": false
+  },
+  {
+    "type": "--",
+    "named": false
+  },
+  {
+    "type": "-=",
+    "named": false
+  },
+  {
+    "type": "->",
+    "named": false
+  },
+  {
+    "type": ".",
+    "named": false
+  },
+  {
+    "type": "..",
+    "named": false
+  },
+  {
+    "type": "...",
+    "named": false
+  },
+  {
+    "type": "..=",
+    "named": false
+  },
+  {
+    "type": "/",
+    "named": false
+  },
+  {
+    "type": "/=",
+    "named": false
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": ";",
+    "named": false
+  },
+  {
+    "type": "<",
+    "named": false
+  },
+  {
+    "type": "<-",
+    "named": false
+  },
+  {
+    "type": "<:",
+    "named": false
+  },
+  {
+    "type": "<<",
+    "named": false
+  },
+  {
+    "type": "<<=",
+    "named": false
+  },
+  {
+    "type": "<=",
+    "named": false
+  },
+  {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": "==",
+    "named": false
+  },
+  {
+    "type": "=>",
+    "named": false
+  },
+  {
+    "type": ">",
+    "named": false
+  },
+  {
+    "type": ">=",
+    "named": false
+  },
+  {
+    "type": ">>",
+    "named": false
+  },
+  {
+    "type": ">>=",
+    "named": false
+  },
+  {
+    "type": "?",
+    "named": false
+  },
+  {
+    "type": "??",
+    "named": false
+  },
+  {
+    "type": "@",
+    "named": false
+  },
+  {
+    "type": "Array",
+    "named": false
+  },
+  {
+    "type": "Bool",
+    "named": true
+  },
+  {
+    "type": "Bool",
+    "named": false
+  },
+  {
+    "type": "Float16",
+    "named": false
+  },
+  {
+    "type": "Float16",
+    "named": true
+  },
+  {
+    "type": "Float32",
+    "named": true
+  },
+  {
+    "type": "Float32",
+    "named": false
+  },
+  {
+    "type": "Float64",
+    "named": true
+  },
+  {
+    "type": "Float64",
+    "named": false
+  },
+  {
+    "type": "Int16",
+    "named": true
+  },
+  {
+    "type": "Int16",
+    "named": false
+  },
+  {
+    "type": "Int32",
+    "named": true
+  },
+  {
+    "type": "Int32",
+    "named": false
+  },
+  {
+    "type": "Int64",
+    "named": false
+  },
+  {
+    "type": "Int64",
+    "named": true
+  },
+  {
+    "type": "Int8",
+    "named": false
+  },
+  {
+    "type": "Int8",
+    "named": true
+  },
+  {
+    "type": "IntNative",
+    "named": true
+  },
+  {
+    "type": "IntNative",
+    "named": false
+  },
+  {
+    "type": "Nothing",
+    "named": false
+  },
+  {
+    "type": "Nothing",
+    "named": true
+  },
+  {
+    "type": "Range",
+    "named": false
+  },
+  {
+    "type": "Rune",
+    "named": false
+  },
+  {
+    "type": "Rune",
+    "named": true
+  },
+  {
+    "type": "String",
+    "named": true
+  },
+  {
+    "type": "String",
+    "named": false
+  },
+  {
+    "type": "Thistype",
+    "named": true
+  },
+  {
+    "type": "UInt16",
+    "named": true
+  },
+  {
+    "type": "UInt16",
+    "named": false
+  },
+  {
+    "type": "UInt32",
+    "named": true
+  },
+  {
+    "type": "UInt32",
+    "named": false
+  },
+  {
+    "type": "UInt64",
+    "named": false
+  },
+  {
+    "type": "UInt64",
+    "named": true
+  },
+  {
+    "type": "UInt8",
+    "named": false
+  },
+  {
+    "type": "UInt8",
+    "named": true
+  },
+  {
+    "type": "UIntNative",
+    "named": false
+  },
+  {
+    "type": "UIntNative",
+    "named": true
+  },
+  {
+    "type": "Unit",
+    "named": true
+  },
+  {
+    "type": "Unit",
+    "named": false
+  },
+  {
+    "type": "[",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
+    "type": "^",
+    "named": false
+  },
+  {
+    "type": "^=",
+    "named": false
+  },
+  {
+    "type": "_",
+    "named": false
+  },
+  {
+    "type": "abstract",
+    "named": false
+  },
+  {
+    "type": "as",
+    "named": false
+  },
+  {
+    "type": "blockComment",
+    "named": true
+  },
+  {
+    "type": "booleanLiteral",
+    "named": true
+  },
+  {
+    "type": "break",
+    "named": false
+  },
+  {
+    "type": "byteLiteral",
+    "named": true
+  },
+  {
+    "type": "case",
+    "named": false
+  },
+  {
+    "type": "catch",
+    "named": false
+  },
+  {
+    "type": "class",
+    "named": false
+  },
+  {
+    "type": "className",
+    "named": true
+  },
+  {
+    "type": "const",
+    "named": false
+  },
+  {
+    "type": "continue",
+    "named": false
+  },
+  {
+    "type": "do",
+    "named": false
+  },
+  {
+    "type": "else",
+    "named": false
+  },
+  {
+    "type": "enum",
+    "named": false
+  },
+  {
+    "type": "enumName",
+    "named": true
+  },
+  {
+    "type": "extend",
+    "named": false
+  },
+  {
+    "type": "finally",
+    "named": false
+  },
+  {
+    "type": "floatLiteral",
+    "named": true
+  },
+  {
+    "type": "for",
+    "named": false
+  },
+  {
+    "type": "foreign",
+    "named": false
+  },
+  {
+    "type": "func",
+    "named": false
+  },
+  {
+    "type": "funcName",
+    "named": true
+  },
+  {
+    "type": "get",
+    "named": false
+  },
+  {
+    "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "if",
+    "named": false
+  },
+  {
+    "type": "import",
+    "named": false
+  },
+  {
+    "type": "in",
+    "named": false
+  },
+  {
+    "type": "init",
+    "named": false
+  },
+  {
+    "type": "inout",
+    "named": false
+  },
+  {
+    "type": "integerLiteral",
+    "named": true
+  },
+  {
+    "type": "interface",
+    "named": false
+  },
+  {
+    "type": "interfaceName",
+    "named": true
+  },
+  {
+    "type": "internal",
+    "named": false
+  },
+  {
+    "type": "is",
+    "named": false
+  },
+  {
+    "type": "let",
+    "named": false
+  },
+  {
+    "type": "lineComment",
+    "named": true
+  },
+  {
+    "type": "macro",
+    "named": false
+  },
+  {
+    "type": "macroName",
+    "named": true
+  },
+  {
+    "type": "main",
+    "named": false
+  },
+  {
+    "type": "match",
+    "named": false
+  },
+  {
+    "type": "mut",
+    "named": false
+  },
+  {
+    "type": "open",
+    "named": false
+  },
+  {
+    "type": "operator",
+    "named": true
+  },
+  {
+    "type": "operator",
+    "named": false
+  },
+  {
+    "type": "override",
+    "named": false
+  },
+  {
+    "type": "package",
+    "named": false
+  },
+  {
+    "type": "private",
+    "named": false
+  },
+  {
+    "type": "prop",
+    "named": false
+  },
+  {
+    "type": "propertyName",
+    "named": true
+  },
+  {
+    "type": "protected",
+    "named": false
+  },
+  {
+    "type": "public",
+    "named": false
+  },
+  {
+    "type": "quote",
+    "named": false
+  },
+  {
+    "type": "redef",
+    "named": false
+  },
+  {
+    "type": "return",
+    "named": false
+  },
+  {
+    "type": "runeLiteral",
+    "named": true
+  },
+  {
+    "type": "sealed",
+    "named": false
+  },
+  {
+    "type": "set",
+    "named": false
+  },
+  {
+    "type": "spawn",
+    "named": false
+  },
+  {
+    "type": "static",
+    "named": false
+  },
+  {
+    "type": "struct",
+    "named": false
+  },
+  {
+    "type": "structName",
+    "named": true
+  },
+  {
+    "type": "super",
+    "named": false
+  },
+  {
+    "type": "synchronized",
+    "named": false
+  },
+  {
+    "type": "this",
+    "named": false
+  },
+  {
+    "type": "throw",
+    "named": false
+  },
+  {
+    "type": "try",
+    "named": false
+  },
+  {
+    "type": "type",
+    "named": false
+  },
+  {
+    "type": "typeAliasName",
+    "named": true
+  },
+  {
+    "type": "unsafe",
+    "named": false
+  },
+  {
+    "type": "var",
+    "named": false
+  },
+  {
+    "type": "where",
+    "named": false
+  },
+  {
+    "type": "while",
+    "named": false
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "|",
+    "named": false
+  },
+  {
+    "type": "|=",
+    "named": false
+  },
+  {
+    "type": "|>",
+    "named": false
+  },
+  {
+    "type": "||",
+    "named": false
+  },
+  {
+    "type": "||=",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
+  },
+  {
+    "type": "~",
+    "named": false
+  },
+  {
+    "type": "~>",
+    "named": false
+  }
+]

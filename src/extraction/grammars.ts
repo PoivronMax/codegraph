@@ -49,6 +49,7 @@ const WASM_GRAMMAR_FILES: Record<GrammarLanguage, string> = {
   terraform: 'tree-sitter-terraform.wasm',
   arkts: 'tree-sitter-arkts.wasm',
   nix: 'tree-sitter-nix.wasm',
+  cangjie: 'tree-sitter-cangjie.wasm',
 };
 
 /**
@@ -169,6 +170,10 @@ export const EXTENSION_MAP: Record<string, Language> = {
   '.tf': 'terraform',
   '.tfvars': 'terraform',
   '.tofu': 'terraform',
+  // Cangjie (HarmonyOS application language). Vendored grammar — see
+  // vendor/tree-sitter-cangjie (Cangjie-SIG/tree-sitter-cangjie 1.1.0 with the
+  // Rust external scanner ported to C for the WASM build).
+  '.cj': 'cangjie',
 };
 
 /**
@@ -310,7 +315,7 @@ export async function loadGrammarsForLanguages(languages: Language[]): Promise<v
       // 0.25.10 (`generate` + `build --wasm`, ABI 15 — upstream's checked-in
       // parser.c is still ABI 13; all 54 upstream corpus tests pass on the
       // regenerated parser).
-      const wasmPath = (lang === 'pascal' || lang === 'scala' || lang === 'lua' || lang === 'luau' || lang === 'csharp' || lang === 'r' || lang === 'cfml' || lang === 'cfscript' || lang === 'cfquery' || lang === 'cobol' || lang === 'vbnet' || lang === 'erlang' || lang === 'terraform' || lang === 'arkts' || lang === 'nix')
+      const wasmPath = (lang === 'pascal' || lang === 'scala' || lang === 'lua' || lang === 'luau' || lang === 'csharp' || lang === 'r' || lang === 'cfml' || lang === 'cfscript' || lang === 'cfquery' || lang === 'cobol' || lang === 'vbnet' || lang === 'erlang' || lang === 'terraform' || lang === 'arkts' || lang === 'nix' || lang === 'cangjie')
         ? path.join(__dirname, 'wasm', wasmFile)
         : require.resolve(`tree-sitter-wasms/out/${wasmFile}`);
       const language = await WasmLanguage.load(wasmPath);
@@ -538,6 +543,7 @@ export function getLanguageDisplayName(language: Language): string {
     erlang: 'Erlang',
     terraform: 'Terraform',
     arkts: 'ArkTS',
+    cangjie: 'Cangjie',
     unknown: 'Unknown',
   };
   return names[language] || language;
