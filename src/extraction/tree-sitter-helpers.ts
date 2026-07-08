@@ -106,15 +106,59 @@ export function getPrecedingDocstring(node: SyntaxNode, source: string): string 
   let sibling = anchor.previousNamedSibling;
   const comments: string[] = [];
 
+  // Cangjie: a comment preceding an interface's FIRST member is hoisted OUT
+  // of the interfaceBody by the grammar, landing as the interfaceDefinition's
+  // child right before the body — unreachable as the member's sibling. When
+  // the first member has no previous sibling, collect the definition-level
+  // trailing comments instead. (Nested interfaceBody wrappers occur, so climb
+  // through them.)
+  if (!sibling) {
+    let wrapper = anchor.parent;
+    while (wrapper && wrapper.type === 'interfaceBody' && !wrapper.previousNamedSibling && wrapper.parent?.type === 'interfaceBody') {
+      wrapper = wrapper.parent;
+    }
+    if (wrapper && wrapper.type === 'interfaceBody') {
+      let defSibling = wrapper.previousNamedSibling;
+      while (defSibling && (defSibling.type === 'blockComment' || defSibling.type === 'lineComment')) {
+        comments.unshift(getNodeText(defSibling, source));
+        defSibling = defSibling.previousNamedSibling;
+      }
+      if (comments.length > 0) {
+        return comments.map(cleanCommentMarkers).join('\n').trim();
+      }
+    }
+  }
+
   while (sibling) {
     if (
       sibling.type === 'comment' ||
       sibling.type === 'line_comment' ||
       sibling.type === 'block_comment' ||
-      sibling.type === 'documentation_comment'
+      sibling.type === 'documentation_comment' ||
+      // Cangjie spells them camelCase
+      sibling.type === 'lineComment' ||
+      sibling.type === 'blockComment'
     ) {
       comments.unshift(getNodeText(sibling, source));
       sibling = sibling.previousNamedSibling;
+    } else if (sibling.type === 'macroExpression') {
+      // Cangjie macro annotations (`@Component`, `@State`, ...) sit BETWEEN
+      // the doc comment and the declaration as siblings (they are not
+      // children the wrapper climb above could handle) — skip them without
+      // collecting so the comment above the annotation block is reached.
+      sibling = sibling.previousNamedSibling;
+    } else if (sibling.type === 'packageDeclaration' || sibling.type === 'importList') {
+      // Cangjie: a comment directly following `package x` OR an import is
+      // absorbed as that node's TRAILING children — it documents the first
+      // declaration after the header (only reachable when everything in
+      // between was annotations/comments), so surface it here.
+      const kids = sibling.namedChildren;
+      for (let i = kids.length - 1; i >= 0; i--) {
+        const kid = kids[i];
+        if (!kid || (kid.type !== 'blockComment' && kid.type !== 'lineComment')) break;
+        comments.unshift(getNodeText(kid, source));
+      }
+      break;
     } else {
       break;
     }

@@ -11015,7 +11015,7 @@ import ohos.base.AppLog
 `;
       const result = extractFromSource('imports.cj', code);
       const names = result.nodes.filter((n) => n.kind === 'import').map((n) => n.name);
-      expect(names).toContain('std.collection');
+      expect(names).toContain('std.collection.*');
       expect(names).toContain('ohos.base');
     });
   });
@@ -11265,5 +11265,536 @@ extend C <: Feature3 {}
     expect(refs).toContain('extends:J');           // interface inheritance
     expect(refs).toContain('implements:Comparable'); // generic supertype, bare name
     expect(refs).toContain('implements:Feature3');   // extend-block conformance
+  });
+});
+
+describe('Cangjie annotations and fields', () => {
+  it('should capture macro annotations onto node decorators', () => {
+    const code = `
+package demo
+
+@Entry
+@Component
+public class MainPage {
+    @State
+    var count: Int64 = 0
+
+    @Builder
+    func header(): Unit {}
+
+    func build(): Unit {}
+}
+
+@Builder
+func globalSlot(): Unit {}
+`;
+    const result = extractFromSource('page.cj', code);
+    const cls = result.nodes.find((n) => n.name === 'MainPage');
+    expect(cls?.decorators).toEqual(['Entry', 'Component']);
+    const count = result.nodes.find((n) => n.name === 'count');
+    expect(count?.kind).toBe('field');
+    expect(count?.decorators).toEqual(['State']);
+    expect(result.nodes.find((n) => n.name === 'header')?.decorators).toEqual(['Builder']);
+    expect(result.nodes.find((n) => n.name === 'globalSlot')?.decorators).toEqual(['Builder']);
+    expect(result.nodes.find((n) => n.name === 'build')?.decorators).toBeUndefined();
+  });
+
+  it('should extract class-body variables as fields but skip locals, and keep initializer calls', () => {
+    const code = `
+package demo
+
+class Store {
+    let repo: Repo = makeRepo()
+
+    func load(): Unit {
+        let local = fetch()
+    }
+}
+`;
+    const result = extractFromSource('store.cj', code);
+    const repo = result.nodes.find((n) => n.name === 'repo');
+    expect(repo?.kind).toBe('field');
+    expect(result.nodes.find((n) => n.name === 'local')).toBeUndefined();
+    const initCall = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'makeRepo'
+    );
+    expect(initCall?.fromNodeId).toBe(repo?.id);
+    const localCall = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'fetch'
+    );
+    expect(localCall?.fromNodeId).toBe(result.nodes.find((n) => n.name === 'load')?.id);
+  });
+});
+
+describe('Cangjie docstrings, enum members, and export flags', () => {
+  it('should capture docstrings, including through annotations and after the package header', () => {
+    const code = `package demo
+
+/** The main page. */
+@Entry
+@Component
+public class MainPage {
+    /** Bumps the counter. */
+    func increment(): Unit {}
+
+    // Plain line doc.
+    func other(): Unit {}
+}
+`;
+    const result = extractFromSource('page.cj', code);
+    expect(result.nodes.find((n) => n.name === 'MainPage')?.docstring).toBe('The main page.');
+    expect(result.nodes.find((n) => n.name === 'increment')?.docstring).toBe('Bumps the counter.');
+    expect(result.nodes.find((n) => n.name === 'other')?.docstring).toBe('Plain line doc.');
+  });
+
+  it('should extract enum cases as enum_member nodes', () => {
+    const code = `package demo
+
+enum Shape {
+    | Dot
+    | Cell(Int64)
+
+    func area(): Int64 { return 0 }
+}
+`;
+    const result = extractFromSource('shape.cj', code);
+    const members = result.nodes.filter((n) => n.kind === 'enum_member');
+    expect(members.map((n) => n.name).sort()).toEqual(['Cell', 'Dot']);
+    expect(members[0]?.qualifiedName).toContain('Shape::');
+    expect(result.nodes.find((n) => n.name === 'area')?.kind).toBe('method');
+  });
+
+  it('should flag public symbols as exported', () => {
+    const code = `package demo
+
+public func api(): Unit {}
+func internalHelper(): Unit {}
+`;
+    const result = extractFromSource('api.cj', code);
+    expect(result.nodes.find((n) => n.name === 'api')?.isExported).toBe(true);
+    expect(result.nodes.find((n) => n.name === 'internalHelper')?.isExported).toBe(false);
+  });
+});
+
+describe('Cangjie grammar-gap pre-parse', () => {
+  it('should survive line-leading attribute chains and keep handler-lambda calls', () => {
+    const code = `package demo
+
+@Component
+class Toolbar {
+    func handleBack(): Unit {}
+
+    func build(): Unit {
+        Text("back")
+            .fontSize(16.0)
+            .padding(top: 8.0, bottom: 8.0)
+            .onClick({ _ => this.handleBack() })
+    }
+
+    func after(): Unit { stillHere() }
+}
+`;
+    const result = extractFromSource('toolbar.cj', code);
+    // The leading-dot chain must not corrupt the class: members after it survive.
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('method');
+    const calls = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls');
+    const handlerCall = calls.find((r) => r.referenceName === 'handleBack');
+    expect(handlerCall).toBeDefined();
+    expect(handlerCall?.fromNodeId).toBe(result.nodes.find((n) => n.name === 'build')?.id);
+    expect(calls.some((r) => r.referenceName === 'stillHere')).toBe(true);
+  });
+
+  it('should survive bodiless interface props', () => {
+    const code = `package demo
+
+interface Config {
+    prop maxAttempts: Int64
+    prop lockoutSeconds: Float64
+    func reload(): Unit
+}
+
+class After {
+    func ok(): Unit {}
+}
+`;
+    const result = extractFromSource('config.cj', code);
+    expect(result.nodes.find((n) => n.name === 'Config')?.kind).toBe('interface');
+    expect(result.nodes.find((n) => n.name === 'reload')?.kind).toBe('method');
+    expect(result.nodes.find((n) => n.name === 'After')?.kind).toBe('class');
+  });
+});
+
+describe('Cangjie field type references', () => {
+  it('should emit references from fields and props to their declared user types', () => {
+    const code = `package demo
+
+class Store {
+    let repo: Repository = LocalRepository()
+    var maybe: ?Config = Option<Config>.None
+    var count: Int64 = 0
+
+    prop kind: FilterKind {
+        get() { FilterKind.All }
+    }
+}
+`;
+    const result = extractFromSource('store.cj', code);
+    const refs = result.unresolvedReferences
+      .filter((r) => r.referenceKind === 'references')
+      .map((r) => r.referenceName);
+    expect(refs).toContain('Repository');
+    expect(refs).toContain('Config'); // option type unwraps
+    expect(refs).toContain('FilterKind'); // prop type
+    expect(refs).not.toContain('Int64'); // builtins skipped
+  });
+});
+
+describe('Cangjie interface docstrings', () => {
+  it('should reach a first member doc comment the grammar hoists out of the body', () => {
+    const code = `package t
+
+interface I {
+    /** First doc. */
+    func first(): Unit
+    /** Second doc. */
+    func second(): Unit
+}
+`;
+    const result = extractFromSource('i.cj', code);
+    expect(result.nodes.find((n) => n.name === 'first')?.docstring).toBe('First doc.');
+    expect(result.nodes.find((n) => n.name === 'second')?.docstring).toBe('Second doc.');
+  });
+
+  it('should not let a blanked abstract prop leak its doc onto the next member', () => {
+    const code = `package t
+
+interface Config {
+    /** Max attempts. */
+    prop maxAttempts: Int64
+    /**
+     * Multi-line prop doc.
+     */
+    prop lockout: Float64
+    /** Reloads from disk. */
+    func reload(): Unit
+}
+`;
+    const result = extractFromSource('c.cj', code);
+    expect(result.nodes.find((n) => n.name === 'reload')?.docstring).toBe('Reloads from disk.');
+  });
+});
+
+describe('Cangjie library-code grammar gaps (pre-parse)', () => {
+  it('should extract `operator override func` members (modifier order swap)', () => {
+    const code = `package demo
+
+public class HostAndPort {
+    public operator override func ==(o: HostAndPort): Bool {
+        return compareParts(o)
+    }
+    func after(): Unit {}
+}
+`;
+    const result = extractFromSource('hp.cj', code);
+    const op = result.nodes.find((n) => n.name === 'operator ==');
+    expect(op?.kind).toBe('method');
+    expect(op?.qualifiedName).toBe('HostAndPort::operator ==');
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('method');
+    expect(
+      result.unresolvedReferences.some((r) => r.referenceKind === 'calls' && r.referenceName === 'compareParts')
+    ).toBe(true);
+  });
+
+  it('should extract `from module import ...` cross-module imports', () => {
+    const code = `package demo
+
+from redis_sdk import redis.client.api.*
+from std import time.Duration
+
+func f(): Unit {}
+`;
+    const result = extractFromSource('imp.cj', code);
+    const names = result.nodes.filter((n) => n.kind === 'import').map((n) => n.name);
+    expect(names).toContain('redis.client.api.*');
+    expect(names).toContain('time');
+    expect(result.nodes.find((n) => n.name === 'f')?.kind).toBe('function');
+  });
+
+  it('should keep implements edges through nested-generic supertypes', () => {
+    const code = `package demo
+
+public class ListBuilder <: ResponseBuilder<ArrayList<Any>> {
+    func build(): Unit {}
+}
+`;
+    const result = extractFromSource('lb.cj', code);
+    expect(result.nodes.find((n) => n.name === 'ListBuilder')?.kind).toBe('class');
+    const impl = result.unresolvedReferences.find((r) => r.referenceKind === 'implements' || r.referenceKind === 'extends');
+    expect(impl?.referenceName).toBe('ResponseBuilder');
+  });
+
+  it('should survive a bare-dollar string literal', () => {
+    const code = `package demo
+
+func marker(): String {
+    return "$"
+}
+func after(): Unit { work() }
+`;
+    const result = extractFromSource('d.cj', code);
+    expect(result.nodes.find((n) => n.name === 'marker')?.kind).toBe('function');
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('function');
+  });
+});
+
+describe('ArkTS broken-chain attribute gating', () => {
+  it('should dot-gate attributes split from their chain by comments or multi-line object args', () => {
+    const code = `@Component
+struct H {
+  build() {
+    Button('x')
+      .height(50)
+      .linearGradient({
+        angle: 90,
+        colors: [[0x4A6CF7, 0.0], [0x4E54C8, 1.0]]
+      })
+      .fontColor(Color.White)
+    Text('y')
+      .fontColor('#666')
+      // note between attributes
+      .fontSize(16)
+  }
+}
+`;
+    const result = extractFromSource('pages/H.ets', code);
+    const calls = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls');
+    // Every framework attribute must be dot-prefixed — a bare name would let
+    // bare-name matching link it to an arbitrary same-named symbol.
+    for (const attr of ['fontColor', 'fontSize', 'height', 'linearGradient']) {
+      expect(calls.some((r) => r.referenceName === attr)).toBe(false);
+      expect(calls.some((r) => r.referenceName === `.${attr}`)).toBe(true);
+    }
+  });
+});
+
+describe('Cangjie consecutive same-line annotated fields', () => {
+  it('should keep the class body intact across consecutive @Prop-style fields', () => {
+    const code = `package demo
+
+class WeatherCard {
+    @Prop var title: String = "t"
+    @Prop var degree: String = "26"
+    @Publish public var wind: String = "11 km/h"
+
+    func build(): Unit {
+        render()
+    }
+}
+`;
+    const result = extractFromSource('card.cj', code);
+    const cls = result.nodes.find((n) => n.name === 'WeatherCard');
+    // The grammar ERRORs on the SECOND same-line annotated field and used to
+    // truncate the class at it — everything after fell out of the class.
+    expect(cls?.endLine).toBe(11);
+    const fields = result.nodes.filter((n) => n.kind === 'field');
+    expect(fields.map((f) => f.name)).toEqual(['title', 'degree', 'wind']);
+    expect(fields[0]?.decorators).toEqual(['Prop']);
+    expect(fields[2]?.decorators).toEqual(['Publish']);
+    const build = result.nodes.find((n) => n.name === 'build');
+    expect(build?.kind).toBe('method');
+    expect(build?.qualifiedName).toBe('WeatherCard::build');
+    const call = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'render'
+    );
+    expect(call?.fromNodeId).toBe(build?.id);
+  });
+
+  it('should emit type references for generic type arguments of field types', () => {
+    const code = `package demo
+
+class VM {
+    @Publish public var hourly: Array<HourlyTempModel> = []
+    @Publish public var place: PlaceInfoModel = PlaceInfoModel()
+}
+`;
+    const result = extractFromSource('vm.cj', code);
+    const refs = result.unresolvedReferences
+      .filter((r) => r.referenceKind === 'references')
+      .map((r) => r.referenceName);
+    expect(refs).toContain('HourlyTempModel');
+    expect(refs).toContain('PlaceInfoModel');
+  });
+});
+
+describe('Cangjie wildcard import followed by a comment', () => {
+  it('should not swallow the following comment into the import name', () => {
+    const code = `package demo
+
+import ohos.resource.*
+
+/** 天气图标映射（WeatherCode → drawable）。
+ * 多行中文注释。
+ */
+public func iconOf(code: Int64): Int64 { return code }
+`;
+    const result = extractFromSource('icons.cj', code);
+    const imports = result.nodes.filter((n) => n.kind === 'import');
+    expect(imports.map((n) => n.name)).toEqual(['ohos.resource.*']);
+    expect(imports[0]!.name).not.toContain('\n');
+    expect(imports[0]!.signature).toBe('import ohos.resource.*');
+    // The comment still belongs to the function that follows it.
+    expect(result.nodes.find((n) => n.name === 'iconOf')?.docstring).toContain('天气图标映射');
+  });
+});
+
+describe('Cangjie top-level bindings', () => {
+  it('should extract package-level let/var and attribute registration calls to them', () => {
+    const code = `package demo
+
+import kit.AbilityKit.AbilityStage
+
+let ENTRY_STAGE_REGISTER_RESULT = AbilityStage.registerCreator("entry", {=> MyAbilityStage()})
+var mutableCounter = 0
+`;
+    const result = extractFromSource('entry.cj', code);
+    const reg = result.nodes.find((n) => n.name === 'ENTRY_STAGE_REGISTER_RESULT');
+    expect(reg?.kind).toBe('constant');
+    expect(result.nodes.find((n) => n.name === 'mutableCounter')?.kind).toBe('variable');
+    // The registration's construction call belongs to the binding, giving the
+    // entry→AbilityStage hop a queryable symbol owner.
+    const inst = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'MyAbilityStage'
+    );
+    expect(inst?.fromNodeId).toBe(reg?.id);
+    // Function-local lets still stay unextracted (pinned elsewhere too).
+    expect(result.nodes.filter((n) => n.kind === 'constant')).toHaveLength(1);
+  });
+});
+
+describe('Cangjie corpus-round grammar gaps (pre-parse)', () => {
+  it('should extract the call operator with its real name', () => {
+    const code = `package demo
+
+class Getter<T> {
+    public operator func ()(): T {
+        return this.getOrThrow()
+    }
+    func after(): Unit {}
+}
+`;
+    const result = extractFromSource('g.cj', code);
+    const op = result.nodes.find((n) => n.name === 'operator ()');
+    expect(op?.kind).toBe('method');
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('method');
+    const call = result.unresolvedReferences.find(
+      (r) => r.referenceKind === 'calls' && r.referenceName === 'getOrThrow'
+    );
+    expect(call?.fromNodeId).toBe(op?.id);
+  });
+
+  it('should survive annotation argument lists the grammar cannot parse', () => {
+    const code = `package demo
+
+class Bus {
+    @Subscriber[threadmode: MAIN, sticky: true, priority: 0]
+    func onEvent(e: Event): Unit { handle(e) }
+}
+
+@Entity[tableName = "animals"]
+class Animal {
+    func speak(): Unit {}
+}
+`;
+    const result = extractFromSource('bus.cj', code);
+    const onEvent = result.nodes.find((n) => n.name === 'onEvent');
+    expect(onEvent?.kind).toBe('method');
+    expect(onEvent?.decorators).toEqual(['Subscriber']);
+    expect(result.nodes.find((n) => n.name === 'Animal')?.decorators).toEqual(['Entity']);
+    expect(result.nodes.find((n) => n.name === 'speak')?.kind).toBe('method');
+  });
+
+  it('should survive line-leading + continuations and keep their calls', () => {
+    const code = `package demo
+
+class Chart {
+    func offset(): Float64 {
+        return this.base()
+                    + this.mLegend.getXOffset()
+                    + this.mLegend.getYOffset()
+    }
+    func after(): Unit {}
+}
+`;
+    const result = extractFromSource('chart.cj', code);
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('method');
+    const names = result.unresolvedReferences
+      .filter((r) => r.referenceKind === 'calls')
+      .map((r) => r.referenceName);
+    expect(names).toContain('getXOffset');
+    expect(names).toContain('getYOffset');
+  });
+
+  it('should survive regex-anchor dollars in strings and rune literals', () => {
+    const code = `package demo
+
+func patterns(c: Rune): Bool {
+    let re = Regex("^<(?:script|pre|style)(?:\\\\s|>|$)", IgnoreCase)
+    let re2 = Regex("^abc\\\\s*$")
+    match (c) {
+        case '!' | '$' | '%' => return true
+        case _ => return false
+    }
+}
+func after(): Unit { work() }
+`;
+    const result = extractFromSource('rx.cj', code);
+    expect(result.nodes.find((n) => n.name === 'patterns')?.kind).toBe('function');
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('function');
+  });
+
+  it('should keep the class parseable when an initializer wraps to a leading-= line', () => {
+    const code = `package demo
+
+class Loaders {
+    protected static let FAILING: TemplateLoader
+                            = DefenseTemplateLoader()
+    func m(): Unit { work() }
+}
+
+func lam(): Unit {
+    spawn {
+        =>
+        background()
+    }
+}
+`;
+    const result = extractFromSource('ld.cj', code);
+    expect(result.nodes.find((n) => n.name === 'FAILING')?.kind).toBe('field');
+    expect(result.nodes.find((n) => n.name === 'm')?.kind).toBe('method');
+    // Line-leading `=>` lambda arrows must NOT be blanked.
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('background');
+  });
+});
+
+describe('Cangjie arrow-form trailing lambda in registrations', () => {
+  it('should capture the construction inside {=> X()} arrow lambdas', () => {
+    const code = `package demo
+
+import kit.AbilityKit.AbilityStage
+
+let A = AbilityStage.registerCreator("entry", {=> MyAbilityStage()})
+let B = TestRunner.registerCreator("T") {OpenHarmonyTestRunner()}
+`;
+    const result = extractFromSource('reg.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const calls = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    // Both lambda spellings — arrow {=> X()} and bare {X()} — must capture
+    // their construction, attributed to the top-level binding.
+    expect(calls).toContain('MyAbilityStage');
+    expect(calls).toContain('OpenHarmonyTestRunner');
+    const byId = Object.fromEntries(result.nodes.map((n) => [n.id, n.name]));
+    const my = result.unresolvedReferences.find((r) => r.referenceName === 'MyAbilityStage');
+    expect(byId[my!.fromNodeId]).toBe('A');
   });
 });

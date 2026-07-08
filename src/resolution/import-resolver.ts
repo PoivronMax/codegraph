@@ -1987,6 +1987,18 @@ function findExportedSymbol(
     // `.ts`/`.tsx` `export default fn`/`class` case. Without the component
     // branch, an `export { default as X } from './X.svelte'` barrel never
     // resolves and the component shows a false 0 callers (#629).
+    // An explicit `export default <identifier>` names the default export —
+    // resolve to THAT symbol, whatever its kind. The first-exported-class
+    // fallback below mis-picked an unrelated class when the default export
+    // is a variable (`export default newsViewModel as NewsViewModel;` in a
+    // file that also exports data classes → resolved to the wrong class and
+    // manufactured instantiates edges to it).
+    const source = context.readFile(filePath);
+    const explicit = source?.match(/^\s*export\s+default\s+([A-Za-z_$][\w$]*)\s*(?:as\b|;|\s*$)/m);
+    if (explicit && !['function', 'class', 'new', 'async', 'await', 'abstract', 'interface'].includes(explicit[1]!)) {
+      const named = nodesInFile.find((n) => n.name === explicit[1]);
+      if (named) return named;
+    }
     const direct =
       nodesInFile.find((n) => n.isExported && n.kind === 'component') ??
       nodesInFile.find(

@@ -1118,6 +1118,43 @@ function collectGitStatus(repoDir: string, prefix: string, out: GitChanges, over
  * levels), then keeps files with a supported source extension. For non-git
  * projects, falls back to a filesystem walk that parses .gitignore itself.
  */
+/**
+ * HarmonyOS Cangjie entry-REGISTRATION files (`module_*_entry.cj`,
+ * `ability_*_entry.cj`). The hvigor toolchain generates them, so every
+ * HarmonyOS template gitignores them — but they hold the app's ONLY entry
+ * wiring (`let X = AbilityStage.registerCreator("entry", {=> MyStage()})`),
+ * and dropping them severs the entry→AbilityStage→Ability chain. They are
+ * exempt from ignore rules, and in git repos (where `git ls-files` already
+ * applied .gitignore) they are globbed back in when present on disk.
+ */
+export function isCangjieEntryRegistration(filePath: string): boolean {
+  return /(?:^|\/)(?:module_\w*_entry|ability_\w*_entry)\.cj$/.test(filePath);
+}
+
+/** Find on-disk Cangjie entry-registration files a git scan would have dropped. */
+function findCangjieEntryRegistrations(rootDir: string): string[] {
+  const out: string[] = [];
+  const SKIP = new Set(['.git', 'node_modules', 'oh_modules', 'build', 'target', '.codegraph', 'third_party']);
+  const walk = (dir: string, depth: number): void => {
+    if (depth > 8) return;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (e.isDirectory()) {
+        if (!SKIP.has(e.name) && !e.name.startsWith('.')) walk(path.join(dir, e.name), depth + 1);
+      } else if (isCangjieEntryRegistration(e.name)) {
+        out.push(normalizePath(path.relative(rootDir, path.join(dir, e.name))));
+      }
+    }
+  };
+  walk(rootDir, 0);
+  return out;
+}
+
 export function scanDirectory(
   rootDir: string,
   onProgress?: (current: number, file: string) => void
@@ -1135,6 +1172,13 @@ export function scanDirectory(
         files.push(filePath);
         count++;
         onProgress?.(count, filePath);
+      }
+    }
+    // Gitignored-but-essential Cangjie entry registrations (see the helper).
+    if (files.some((f) => f.endsWith('.cj'))) {
+      const present = new Set(files);
+      for (const extra of findCangjieEntryRegistrations(rootDir)) {
+        if (!present.has(extra)) files.push(extra);
       }
     }
     return files;
@@ -1168,6 +1212,12 @@ export async function scanDirectoryAsync(
         if (count % 100 === 0) {
           await new Promise<void>(r => setImmediate(r));
         }
+      }
+    }
+    if (files.some((f) => f.endsWith('.cj'))) {
+      const present = new Set(files);
+      for (const extra of findCangjieEntryRegistrations(rootDir)) {
+        if (!present.has(extra)) files.push(extra);
       }
     }
     return files;
@@ -1209,6 +1259,7 @@ function scanDirectoryWalk(
   };
 
   const isIgnored = (fullPath: string, isDir: boolean, matchers: ScopedIgnore[]): boolean => {
+    if (!isDir && isCangjieEntryRegistration(fullPath)) return false;
     for (const { dir, ig } of matchers) {
       let rel = normalizePath(path.relative(dir, fullPath));
       if (!rel || rel.startsWith('..')) continue; // not under this matcher's dir

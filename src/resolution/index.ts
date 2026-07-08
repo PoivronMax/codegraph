@@ -750,7 +750,7 @@ export class ReferenceResolver {
     // Nix static path imports (`import ./x.nix`) name a FILE, not a symbol —
     // they bypass the symbol-existence check and resolve via resolveViaImport.
     const existenceName =
-      ref.language === 'arkts' && ref.referenceName.startsWith('.')
+      (ref.language === 'arkts' || ref.language === 'cangjie') && ref.referenceName.startsWith('.')
         ? ref.referenceName.slice(1)
         : ref.referenceName;
     if (
@@ -837,6 +837,33 @@ export class ReferenceResolver {
             curr.confidence > best.confidence ? curr : best
           )
         : null;
+    }
+
+    // A name explicitly bound by an import from an OUT-OF-REPO module can
+    // never be a repo symbol — letting it fall through to name matching
+    // manufactures cross-app edges (the system `AlertDialog` imported from
+    // '@kit.ArkUI' fuzzy-matched onto an unrelated `alertDialog` method in
+    // another app of a monorepo). Import-based resolution (strategy 2) has
+    // already had its chance; stop here instead of guessing.
+    const dottedHead = ref.referenceName.split('.')[0]!;
+    if (dottedHead) {
+      const boundExternal = this.context
+        .getImportMappings(ref.filePath, ref.language)
+        .some(
+          (imp) =>
+            !imp.resolvedPath &&
+            // HarmonyOS SYSTEM namespaces only ('@kit.ArkUI', '@ohos.router')
+            // — dot-separated, so unambiguous against workspace/npm scoped
+            // packages ('@scope/name'), which stay eligible for the ohpm
+            // workspace and name-matching strategies.
+            /^@(?:kit|ohos|system|hms|arkts)\./.test(imp.source) &&
+            (imp.localName === dottedHead || imp.localName === ref.referenceName)
+        );
+      if (boundExternal) {
+        return candidates.length > 0
+          ? candidates.reduce((best, curr) => (curr.confidence > best.confidence ? curr : best))
+          : null;
+      }
     }
 
     // Strategy 3: Try name matching
@@ -975,9 +1002,19 @@ export class ReferenceResolver {
     // pass the table must hold nothing that pass processed, so that any row
     // still present belongs to an interrupted run and the sweep can key off
     // a bare row count.
-    if (result.unresolved.length > 0) {
+    // EXCEPT hierarchy refs (extends/implements): an unresolvable supertype
+    // is a real fact about the class — usually an out-of-repo SDK type
+    // (`class MainAbility <: UIAbility`) — and deleting it erased the only
+    // record of the inheritance. They stay parked in unresolved_refs (the
+    // pending-count query exempts them so the sweep and `status` never read
+    // them as an interrupted run) and resolve into edges if the supertype
+    // ever enters the repo.
+    const droppable = result.unresolved.filter(
+      (r) => r.referenceKind !== 'extends' && r.referenceKind !== 'implements'
+    );
+    if (droppable.length > 0) {
       this.queries.deleteSpecificResolvedReferences(
-        result.unresolved.map((r) => ({
+        droppable.map((r) => ({
           fromNodeId: r.fromNodeId,
           referenceName: r.referenceName,
           referenceKind: r.referenceKind,
@@ -1095,6 +1132,24 @@ export class ReferenceResolver {
    * Processes unresolved references in chunks, persisting edges and cleaning
    * up resolved refs after each batch to avoid accumulating large arrays.
    */
+  /**
+   * Re-run dynamic-edge synthesis on demand. The batched full-resolution path
+   * runs synthesis at its tail, but sync's git fast path resolves via the
+   * SCOPED resolveAndPersist and skipped it — so a re-synced file's
+   * synthesized edges (state→build re-render bridges, callback dispatch, …)
+   * vanished with its old nodes and only returned on the next full index.
+   * Idempotent by construction: insertEdges is INSERT OR IGNORE against the
+   * edge-identity unique index, so re-synthesizing existing edges is a no-op.
+   * Best-effort like the in-line pass — never fails the caller.
+   */
+  async synthesizeDynamicEdges(): Promise<number> {
+    try {
+      return await synthesizeCallbackEdges(this.queries, this.context);
+    } catch {
+      return 0;
+    }
+  }
+
   async resolveAndPersistBatched(
     onProgress?: (current: number, total: number) => void,
     batchSize: number = 5000
@@ -1145,9 +1200,14 @@ export class ReferenceResolver {
       }
 
       // Delete unresolvable refs from this batch to avoid re-processing them
-      if (result.unresolved.length > 0) {
+      // — except hierarchy refs, parked as a record of out-of-repo
+      // supertypes (see resolveAndPersist).
+      const droppableBatch = result.unresolved.filter(
+        (r) => r.referenceKind !== 'extends' && r.referenceKind !== 'implements'
+      );
+      if (droppableBatch.length > 0) {
         this.queries.deleteSpecificResolvedReferences(
-          result.unresolved.map((r) => ({
+          droppableBatch.map((r) => ({
             fromNodeId: r.fromNodeId,
             referenceName: r.referenceName,
             referenceKind: r.referenceKind,

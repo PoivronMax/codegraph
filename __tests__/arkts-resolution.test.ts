@@ -426,3 +426,94 @@ describe('ohpm main entry (custom barrel + .ts consumer)', () => {
     expect(cg.getOutgoingEdges(report.id).map((e) => e.target)).toContain(repo.id);
   });
 });
+
+describe('Monorepo cross-app precision gates', () => {
+  let tmpDir: string | undefined;
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = undefined;
+  });
+
+  it('never links a system-namespace import to a case-folded decoy in another app', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-sysns-'));
+    fs.mkdirSync(path.join(tmpDir, 'appA'));
+    fs.mkdirSync(path.join(tmpDir, 'appB'));
+    fs.writeFileSync(
+      path.join(tmpDir, 'appA/Page.ets'),
+      "import { AlertDialog } from '@kit.ArkUI';\n" +
+        'struct P {\n' +
+        '  dialog: CustomDialogController = new CustomDialogController({\n' +
+        '    builder: AlertDialog({ primaryTitle: "t" })\n' +
+        '  });\n' +
+        '}\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'appB/CommonUtils.ets'),
+      'export class CommonUtils {\n' +
+        '  alertDialog(): void {}\n' +
+        '}\n'
+    );
+    const cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+    const decoy = cg.getNodesByKind('method').find((n) => n.name === 'alertDialog');
+    expect(decoy).toBeDefined();
+    expect(cg.getIncomingEdges(decoy!.id).filter((e) => e.kind === 'calls')).toHaveLength(0);
+  });
+
+  it('resolves a default import to the explicitly default-exported identifier, not the first exported class', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-defexp-'));
+    fs.writeFileSync(
+      path.join(tmpDir, 'ViewModel.ets'),
+      'class ViewModel {\n' +
+        '  getList(): string[] { return []; }\n' +
+        '}\n' +
+        'let viewModel = new ViewModel();\n' +
+        'export default viewModel as ViewModel;\n' +
+        '\n' +
+        'export class DataBean {\n' +
+        '  id: number = 0;\n' +
+        '}\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'Consumer.ets'),
+      "import ViewModel from './ViewModel';\n" +
+        'struct C {\n' +
+        '  load(): void {\n' +
+        '    ViewModel.getList();\n' +
+        '  }\n' +
+        '}\n'
+    );
+    const cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+    const bean = cg.getNodesByKind('class').find((n) => n.name === 'DataBean');
+    expect(bean).toBeDefined();
+    // The wrong pick manufactured instantiates/calls edges onto DataBean.
+    expect(cg.getIncomingEdges(bean!.id).filter((e) => e.kind !== 'contains')).toHaveLength(0);
+  });
+
+  it('gates bare prototype-builtin method calls to same-file targets only', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-builtin-'));
+    fs.mkdirSync(path.join(tmpDir, 'appA'));
+    fs.mkdirSync(path.join(tmpDir, 'appB'));
+    fs.writeFileSync(
+      path.join(tmpDir, 'appA/Index.ets'),
+      'function darkenColor(num: number): string {\n' +
+        '  return "#" + (0x1000000 + num).toString(16).slice(1);\n' +
+        '}\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'appB/Contact.ets'),
+      'export class Contact {\n' +
+        '  toString(): string { return "c"; }\n' +
+        '  describe(): string { return this.toString(); }\n' +
+        '}\n'
+    );
+    const cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+    const userToString = cg.getNodesByKind('method').find((n) => n.name === 'toString');
+    expect(userToString).toBeDefined();
+    const callers = cg.getIncomingEdges(userToString!.id).filter((e) => e.kind === 'calls');
+    // Same-file describe() keeps its edge; the cross-app builtin call does not link.
+    expect(callers).toHaveLength(1);
+  });
+});

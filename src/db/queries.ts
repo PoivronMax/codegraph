@@ -1800,8 +1800,13 @@ export class QueryBuilder {
    */
   getUnresolvedReferencesCount(): number {
     if (!this.stmts.getUnresolvedCount) {
+      // Hierarchy refs (extends/implements) that resolve to nothing are
+      // deliberately PARKED in the table as the record of an out-of-repo
+      // supertype — they are not pending work, so the count that drives the
+      // #1187 orphan sweep, the batched-loop shrink guard, and `status`'s
+      // interrupted-index warning must not see them.
       this.stmts.getUnresolvedCount = this.db.prepare(
-        'SELECT COUNT(*) as count FROM unresolved_refs'
+        "SELECT COUNT(*) as count FROM unresolved_refs WHERE reference_kind NOT IN ('extends', 'implements')"
       );
     }
     const row = this.stmts.getUnresolvedCount.get() as { count: number };

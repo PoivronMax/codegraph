@@ -1749,6 +1749,15 @@ export function matchFuzzy(
 /** ArkUI attribute-helper decorators a `.attr(...)` chain may resolve to. */
 const ARKUI_ATTRIBUTE_DECORATORS = new Set(['Extend', 'Styles', 'AnimatableExtend', 'Builder']);
 
+/** JS prototype-builtin method names a bare call ref must not cross-file match. */
+const JS_PROTOTYPE_BUILTINS = new Set([
+  'toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
+  'propertyIsEnumerable', 'constructor',
+]);
+
+/** Languages whose extractors emit dot-prefixed chained-UI-attribute refs. */
+const ARKUI_ATTRIBUTE_LANGS = new Set(['arkts', 'cangjie']);
+
 export function matchReference(
   ref: UnresolvedRef,
   context: ResolutionContext
@@ -1758,6 +1767,28 @@ export function matchReference(
   // worse than none).
   if (ref.referenceKind === 'function_ref') {
     return matchFunctionRef(ref, context);
+  }
+
+  // A bare call to a JS PROTOTYPE-BUILTIN method name (`(expr).toString(16)`,
+  // `x.valueOf()`) almost always targets the builtin, not a repo symbol — the
+  // receiver's type is unknown to the extractor, and letting the bare name
+  // fall through linked `toString` to an unrelated class's method in another
+  // application of a monorepo. Same-file overrides still resolve (a class
+  // defining its own toString keeps its intra-file edges); anything else
+  // stays unlinked rather than guessed.
+  if (
+    ref.referenceKind === 'calls' &&
+    JS_PROTOTYPE_BUILTINS.has(ref.referenceName) &&
+    (ref.language === 'typescript' || ref.language === 'tsx' || ref.language === 'javascript' || ref.language === 'jsx' || ref.language === 'arkts')
+  ) {
+    const sameFile = context
+      .getNodesByName(ref.referenceName)
+      .filter((n) => n.filePath === ref.filePath && (n.kind === 'method' || n.kind === 'function'));
+    if (sameFile.length >= 1) {
+      const target = sameFile.reduce((x, y) => (x.startLine <= y.startLine ? x : y));
+      return { original: ref, targetNodeId: target.id, confidence: 0.85, resolvedBy: 'exact-match' };
+    }
+    return null;
   }
 
   // ArkTS chained UI attributes — emitted with a leading dot (`.titleStyle`,
@@ -1770,14 +1801,16 @@ export function matchReference(
   // same-named properties thousands of false callers. Ambiguity rule matches
   // the rest of the file: several same-named helpers → prefer the call-site
   // file, still ambiguous → drop the ref rather than guess.
-  if (ref.language === 'arkts' && ref.referenceName.startsWith('.')) {
+  if (ARKUI_ATTRIBUTE_LANGS.has(ref.language) && ref.referenceName.startsWith('.')) {
     const base = ref.referenceName.slice(1);
     const candidates = context
       .getNodesByName(base)
       .filter(
         (n) =>
-          n.language === 'arkts' &&
-          n.kind === 'function' &&
+          n.language === ref.language &&
+          // Cangjie @Builder attribute helpers may be class members; ArkTS
+          // keeps its original function-only contract.
+          (n.kind === 'function' || (ref.language === 'cangjie' && n.kind === 'method')) &&
           (n.decorators ?? []).some((d) => ARKUI_ATTRIBUTE_DECORATORS.has(d))
       );
     const chosen =

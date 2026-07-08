@@ -4045,11 +4045,30 @@ export class TreeSitterExtractor {
         if (fn?.type === 'member_expression' || fn?.type === 'arkui_dsl_decorator_member_expression') {
           const obj = getChildByField(fn, 'object');
           const prop = getChildByField(fn, 'property');
+          // A comment or a multi-line object argument between two chained
+          // attributes mis-associates the chain: `.fontColor('#666')` newline
+          // `// note` newline `.fontSize(x)` parses as `('#666').fontSize(x)`
+          // — the receiver degrades to a parenthesized_expression that is
+          // REALLY the previous attribute's ARGUMENTS. The fingerprint: in a
+          // correct parse, a parenthesized expression can never directly
+          // follow an identifier character or a closing `)`/`]` (the parser
+          // would have consumed it as call arguments), so a parenthesized
+          // receiver preceded by one marks the broken-chain shape. Without
+          // this the attribute leaked as a BARE name and bare-name matching
+          // linked it to an arbitrary same-named symbol (measured: 11 wrong
+          // edges across the OpenHarmony codelabs monorepo).
+          let commentSplitChain = false;
+          if (obj?.type === 'parenthesized_expression') {
+            let p = obj.startIndex - 1;
+            while (p >= 0 && /\s/.test(this.source[p]!)) p--;
+            commentSplitChain = p >= 0 && /[A-Za-z0-9_$)\]]/.test(this.source[p]!);
+          }
           if (
             prop &&
             (fn.type === 'arkui_dsl_decorator_member_expression' ||
               obj?.type === 'call_expression' ||
-              obj?.type === 'arkui_component_expression')
+              obj?.type === 'arkui_component_expression' ||
+              commentSplitChain)
           ) {
             emitAttr(prop);
             if (/^on[A-Z]/.test(getNodeText(prop, this.source))) {

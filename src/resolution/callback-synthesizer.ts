@@ -490,6 +490,66 @@ function arkuiStateBuildEdges(queries: QueryBuilder, ctx: ResolutionContext): Ed
   return edges;
 }
 
+/**
+ * ArkUI-in-Cangjie state -> build: HarmonyOS Cangjie apps use the ArkUI
+ * declarative-UI model. A
+ * `@Component class` holds `@State`/`@Link`/... reactive FIELDS; assigning one
+ * re-runs `build()`. Same precision gates: the class must carry a component
+ * annotation, own a `build()` method and at least one reactive member, and a
+ * sibling method links only when its body ASSIGNS (or collection-mutates) one
+ * of those members. Cangjie collections mutate through append/add/remove/...
+ * so the mutator alternation extends the JS one.
+ */
+const CANGJIE_COMPONENT_ANNOTATIONS = new Set([
+  'Component', 'ComponentV2', 'Entry', 'CustomDialog', 'Reusable', 'HybridComponentEntry',
+]);
+const CANGJIE_COLLECTION_MUTATORS =
+  ARKUI_ARRAY_MUTATORS + '|append|add|remove|removeAt|insert|clear|prepend';
+
+function cangjieStateBuildEdges(queries: QueryBuilder, ctx: ResolutionContext): Edge[] {
+  const edges: Edge[] = [];
+  const seen = new Set<string>();
+  const components = [...queries.getNodesByKind('class'), ...queries.getNodesByKind('struct')];
+  for (const comp of components) {
+    if (comp.language !== 'cangjie') continue;
+    if (!(comp.decorators ?? []).some((d) => CANGJIE_COMPONENT_ANNOTATIONS.has(d))) continue;
+    const children = queries.getOutgoingEdges(comp.id, ['contains'])
+      .map((e) => queries.getNodeById(e.target))
+      .filter((n): n is Node => !!n);
+    const build = children.find((n) => n.kind === 'method' && n.name === 'build');
+    if (!build) continue;
+    const reactive = children.filter(
+      (n) => (n.kind === 'field' || n.kind === 'property') &&
+        (n.decorators ?? []).some((d) => ARKUI_REACTIVE_DECORATORS.has(d))
+    );
+    if (reactive.length === 0) continue;
+    const propAlternation = reactive
+      .map((p) => p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
+    const mutationRe = new RegExp(
+      `this\\.(?:${propAlternation})\\s*(?:=(?!=)|\\+\\+|--|[+\\-*/%&|^]=|\\.(?:${CANGJIE_COLLECTION_MUTATORS})\\s*\\()`
+    );
+    let added = 0;
+    for (const m of children) {
+      if (added >= MAX_CALLBACKS_PER_CHANNEL) break;
+      if (m.kind !== 'method' || m.id === build.id) continue;
+      const content = ctx.readFile(m.filePath);
+      const src = content && sliceLines(content, m.startLine, m.endLine);
+      if (!src || !mutationRe.test(stripCommentsForRegex(src, 'typescript'))) continue;
+      const key = `${m.id}>${build.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      edges.push({
+        source: m.id, target: build.id, kind: 'calls', line: m.startLine,
+        provenance: 'heuristic',
+        metadata: { synthesizedBy: 'arkui-state', via: 'state assignment', registeredAt: `${build.filePath}:${build.startLine}` },
+      });
+      added++;
+    }
+  }
+  return edges;
+}
+
 /** Emit/subscribe call sites of HarmonyOS's `@ohos.events.emitter` bus. */
 const ARKUI_EMITTER_CALL_RE = /\bemitter\s*\.\s*(emit|on|once)\s*\(\s*([A-Za-z_$][\w$.]*|\{[^)]{0,120}?\beventId\s*:\s*[^,}]+[^)]*?\})/g;
 
@@ -3328,6 +3388,7 @@ export async function synthesizeCallbackEdges(queries: QueryBuilder, ctx: Resolu
   const pascalEdges = pascalFormEdges(ctx); await yieldToLoop();
   const flutterEdges = flutterBuildEdges(queries, ctx); await yieldToLoop();
   const arkuiStateEdges = arkuiStateBuildEdges(queries, ctx); await yieldToLoop();
+  const cangjieStateEdges = cangjieStateBuildEdges(queries, ctx); await yieldToLoop();
   const arkuiEmitter = arkuiEmitterEdges(ctx); await yieldToLoop();
   const arkuiRoutes = arkuiRouterEdges(ctx); await yieldToLoop();
   const cppEdges = cppOverrideEdges(queries); await yieldToLoop();
@@ -3368,6 +3429,7 @@ export async function synthesizeCallbackEdges(queries: QueryBuilder, ctx: Resolu
     ...pascalEdges,
     ...flutterEdges,
     ...arkuiStateEdges,
+    ...cangjieStateEdges,
     ...arkuiEmitter,
     ...arkuiRoutes,
     ...cppEdges,

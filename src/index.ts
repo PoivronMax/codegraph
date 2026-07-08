@@ -627,6 +627,13 @@ export class CodeGraph {
                 total,
               });
             });
+
+            // Rebuild dynamic-dispatch edges the scoped pass can't produce:
+            // re-extracting a file cascade-deleted its synthesized edges
+            // (state→build bridges, callback dispatch), and only the batched
+            // path regenerates them. Idempotent (INSERT OR IGNORE), so
+            // unchanged files' surviving edges are untouched.
+            await this.resolver.synthesizeDynamicEdges();
           } else {
             // No git info — use batched resolution to avoid OOM
             const unresolvedCount = this.queries.getUnresolvedReferencesCount();
