@@ -81,7 +81,9 @@ function render(): void {
   let line: string;
   if (currentPercent >= 0) {
     const barWidth = 25;
-    const filled = Math.round(barWidth * currentPercent / 100);
+    // Progress can legitimately overshoot 100 (a phase's item count grows
+    // while it runs); clamp so the bar math never goes negative.
+    const filled = Math.min(barWidth, Math.round(barWidth * currentPercent / 100));
     const empty = barWidth - filled;
     line = `${DM}${G.rail}${RST}  ${color}${glyph}${RST} ${currentMessage}  ${renderBar(frame, filled, empty)}  ${currentPercent}%`;
   } else if (currentCount > 0) {
