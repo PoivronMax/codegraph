@@ -317,8 +317,184 @@ export const cangjieExtractor: LanguageExtractor = {
     const lines = source.split('\n');
     let changed = false;
     let offset = 0;
+    let inTripleString = false;
+    let nativeChain = false; // inside a leading-dot chain that parses natively
+    let braceDepth = 0; // approximate brace depth (strings/comments stripped)
+    const bracketStack: string[] = []; // open-bracket stack, same sanitization
+    let enumBodyDepth = -1; // braceDepth of the innermost enum body, -1 outside
+    let inAnnoArgs = false; // inside a multi-line annotation argument list
+    let macroParenDepth = 0; // inside a multi-line `@Macro[...](...)` body
+    let commentDepth = 0; // block-comment nesting depth across lines
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i]!;
+      // Triple-quoted multi-line strings (\"\"\") — no grammar rule. Replace
+      // the opener with a one-char literal and blank the rest through the
+      // closer; content is irrelevant to extraction.
+      if (inTripleString) {
+        const close = line.indexOf('"""');
+        if (close >= 0) {
+          // Blank through the closer, KEEP what follows (a comma, `)`, …).
+          lines[i] = ' '.repeat(close + 3) + line.slice(close + 3);
+          inTripleString = false;
+        } else {
+          lines[i] = ' '.repeat(line.length);
+        }
+        line = lines[i]!;
+        changed = true;
+        if (inTripleString) { offset += lines[i]!.length + 1; continue; }
+      }
+      // Mask single-line raw strings first — `##""""##` legitimately contains
+      // a `"""` substring that is NOT a triple-quote opener.
+      const rawMasked = line.replace(/(##?)"[\s\S]*?"\1/g, (m) => ' '.repeat(m.length));
+      const tq = rawMasked.indexOf('"""');
+      if (tq >= 0) {
+        const close = rawMasked.indexOf('"""', tq + 3);
+        if (close >= 0) {
+          // Single-line: collapse to a one-char literal, keep the tail.
+          line = lines[i] = line.slice(0, tq) + '" "' + ' '.repeat(close - tq) + line.slice(close + 3);
+        } else {
+          inTripleString = true;
+          line = lines[i] = line.slice(0, tq) + '" "' + ' '.repeat(line.length - tq - 3);
+        }
+        changed = true;
+      }
+      // Unified comment scan. Two jobs: (a) the spec allows NESTED block
+      // comments but the grammar's lexer ends at the first `*/` — blank the
+      // inner delimiters so the region reads as one flat comment; (b) produce
+      // a comment-free copy of the line for the brace tracking below.
+      let codeLine = '';
+      {
+        const chars = line.split('');
+        let j = 0;
+        let inStr: string | null = null;
+        while (j < chars.length) {
+          const c = chars[j]!;
+          const pair = c + (chars[j + 1] ?? '');
+          if (commentDepth > 0) {
+            if (pair === '/*') {
+              chars[j] = ' ';
+              chars[j + 1] = ' ';
+              commentDepth++;
+              changed = true;
+              codeLine += '  ';
+              j += 2;
+              continue;
+            }
+            if (pair === '*/') {
+              if (commentDepth > 1) {
+                chars[j] = ' ';
+                chars[j + 1] = ' ';
+                changed = true;
+              }
+              commentDepth--;
+              codeLine += '  ';
+              j += 2;
+              continue;
+            }
+            codeLine += ' ';
+            j++;
+            continue;
+          }
+          if (inStr) {
+            if (c === '\\') {
+              codeLine += '  ';
+              j += 2;
+              continue;
+            }
+            if (c === inStr) inStr = null;
+            codeLine += ' ';
+            j++;
+            continue;
+          }
+          if (c === '"' || c === "'") {
+            inStr = c;
+            codeLine += ' ';
+            j++;
+            continue;
+          }
+          if (pair === '//') {
+            codeLine += ' '.repeat(chars.length - j);
+            break;
+          }
+          if (pair === '/*') {
+            commentDepth = 1;
+            codeLine += '  ';
+            j += 2;
+            continue;
+          }
+          codeLine += c;
+          j++;
+        }
+        line = lines[i] = chars.join('');
+      }
+      // Enum bodies only admit cases, funcs and props — a `static let`/`var`
+      // member (grammar gap) ERRORs and truncates the body. Track the brace
+      // depth (comments/strings stripped via codeLine) to know when a line
+      // sits DIRECTLY inside an enum body, and blank such members there
+      // (losing one constant, keeping every case and func parseable).
+      const depthAtStart = braceDepth;
+      const topAtStart = bracketStack[bracketStack.length - 1];
+      for (const ch of codeLine) {
+        if (ch === '{') braceDepth++;
+        else if (ch === '}') braceDepth--;
+        if (ch === '{' || ch === '(' || ch === '[') {
+          bracketStack.push(ch);
+        } else if (ch === '}' || ch === ')' || ch === ']') {
+          const want = ch === '}' ? '{' : ch === ')' ? '(' : '[';
+          if (bracketStack[bracketStack.length - 1] === want) bracketStack.pop();
+        }
+      }
+      if (enumBodyDepth >= 0 && braceDepth < enumBodyDepth) enumBodyDepth = -1;
+      if (enumBodyDepth < 0 && braceDepth > depthAtStart && /^\s*(?:(?:public|private|protected|internal|sealed|open)\s+)*enum\s+[A-Za-z_]/.test(line)) {
+        enumBodyDepth = braceDepth;
+      }
+      if (enumBodyDepth >= 0 && depthAtStart === enumBodyDepth && !line.includes('{')
+        && /^\s*(?:(?:public|private|protected|internal|static|const)\s+)*(?:let|var)\s+[A-Za-z_]/.test(line)) {
+        line = lines[i] = ' '.repeat(line.length);
+        changed = true;
+      }
+      // Empty macro-quote `quote()` — the grammar's quote expression requires
+      // content; a same-width plain identifier keeps the statement parseable.
+      if (line.includes('quote()')) {
+        line = lines[i] = line.replace(/\bquote\(\)/g, 'quote_x');
+        changed = true;
+      }
+      // Backslash line continuations — blank the trailing backslash; a
+      // binary operator left dangling at end of line parses fine.
+      const contBs = line.match(/^(.*\S.*)\\\s*$/);
+      if (contBs && !line.trimStart().startsWith('//')) {
+        const at = line.lastIndexOf('\\');
+        line = lines[i] = line.slice(0, at) + ' ' + line.slice(at + 1);
+        changed = true;
+      }
+      // `@When` conditional-compilation annotation directly above an import —
+      // the grammar can't attach an annotation to an import; blank the
+      // annotation line (it is a compile-time switch, not graph content).
+      if (/^\s*@When(\[.*\])?\s*$/.test(line) && i + 1 < lines.length && /^\s*(?:internal\s+|protected\s+|public\s+|private\s+)?import\b/.test(lines[i + 1]!)) {
+        line = lines[i] = ' '.repeat(line.length);
+        changed = true;
+      }
+      // `while (let md: Type <- expr)` / `if (let x: T <- e)` — the grammar
+      // accepts let-bindings only WITHOUT a type annotation; blank it.
+      const letBind = line.match(/((?:while|if)\s*\(\s*let\s+\w+)(\s*:\s*[\w.?<>\[\]]+)(\s*<-)/);
+      if (letBind) {
+        const at = line.indexOf(letBind[2]!, line.indexOf(letBind[1]!) + letBind[1]!.length - 1);
+        line = lines[i] = line.slice(0, at) + ' '.repeat(letBind[2]!.length) + line.slice(at + letBind[2]!.length);
+        changed = true;
+      }
+      // Named-tuple RETURN types — `): (group: UInt32, flags: Int64)` — the
+      // grammar has no labeled tuple types; blank the labels (plain tuple
+      // types parse). Call-site named ARGUMENTS are untouched (different
+      // shape: no `): (` prefix).
+      const namedTuple = line.match(/\)\s*:\s*\(([^()]*:[^()]*)\)/);
+      if (namedTuple) {
+        const inner = namedTuple[1]!;
+        const blanked = inner.replace(/(^|,)(\s*)([A-Za-z_]\w*)(\s*):/g, (_m, pre, ws, name, ws2) => pre + ws + ' '.repeat(name.length) + ws2 + ' ');
+        if (blanked !== inner) {
+          line = lines[i] = line.replace(inner, blanked);
+          changed = true;
+        }
+      }
       // `public operator override func ==` — the grammar only accepts
       // `override operator`; the two spellings are the same length, so swap
       // in place.
@@ -330,19 +506,131 @@ export const cangjieExtractor: LanguageExtractor = {
       // grammar's operator rule. Substitute the same-width `==` so the member
       // parses as an operator function, and record the real symbol for
       // resolveName.
+      // Receiver-syntax extension functions (`func String.padEnd(w: Int64)`)
+      // — no grammar rule for the `Type.` prefix. Blank it; the function
+      // extracts under its bare name (extend-like semantics).
+      const recvFn = line.match(/(func\s+)([A-Z]\w*\.)(?=[a-z_])/);
+      if (recvFn) {
+        const at = line.indexOf(recvFn[2]!, line.indexOf(recvFn[1]!));
+        line = lines[i] = line.slice(0, at) + ' '.repeat(recvFn[2]!.length) + line.slice(at + recvFn[2]!.length);
+        changed = true;
+      }
       const callOp = line.match(/operator\s+func\s+\(\)/);
       if (callOp) {
         substitutedOperators.set(i + 1, '()');
         line = lines[i] = line.replace(/(operator\s+func\s+)\(\)/, '$1==');
         changed = true;
       }
+      // Multi-line DSL macro invocation — `@Enum[SimpleEnum](` newline
+      // `Val1` … `)` — the grammar only parses single-line macro calls.
+      // Blank the parenthesized body; the `@Enum[...]` residue is handled by
+      // the annotation rules below and survives as a plain annotation.
+      if (macroParenDepth > 0) {
+        let cut = -1;
+        for (let j = 0; j < codeLine.length; j++) {
+          if (codeLine[j] === '(') macroParenDepth++;
+          else if (codeLine[j] === ')') {
+            macroParenDepth--;
+            if (macroParenDepth === 0) { cut = j; break; }
+          }
+        }
+        line = lines[i] = cut >= 0 ? ' '.repeat(cut + 1) + line.slice(cut + 1) : ' '.repeat(line.length);
+        changed = true;
+      } else {
+        const macroOpen = line.match(/^(\s*@[A-Za-z_][\w.]*(?:\[[^\]]*\])?)\(/);
+        if (macroOpen) {
+          let depth = 0;
+          for (const ch of codeLine.slice(macroOpen[1]!.length)) {
+            if (ch === '(') depth++;
+            else if (ch === ')') depth--;
+          }
+          if (depth > 0) {
+            line = lines[i] = macroOpen[1] + ' '.repeat(line.length - macroOpen[1]!.length);
+            macroParenDepth = depth;
+            changed = true;
+          }
+        }
+      }
       // Own-line annotation with an argument list the grammar can't parse
       // (`@Subscriber[threadmode: MAIN, sticky: true]`, `@Entity[tableName =
       // "x"]`) — blank the bracket part; the name is what decorators keep.
-      const annoArgs = line.match(/^(\s*@[A-Za-z_][\w.]*)(\[[^\]]*\])(\s*)$/);
+      const annoArgs = line.match(/^(\s*)(@!?[A-Za-z_][\w.]*)(\[.*\])(\s*)$/);
       if (annoArgs) {
-        line = lines[i] = annoArgs[1] + ' '.repeat(annoArgs[2]!.length) + annoArgs[3];
+        // `@!Name` (compiler-annotation form, e.g. `@!APILevel[...]`) has no
+        // grammar rule at all — blank the name along with the arguments.
+        const keepName = !annoArgs[2]!.startsWith('@!');
+        line = lines[i] = annoArgs[1]!
+          + (keepName ? annoArgs[2]! : ' '.repeat(annoArgs[2]!.length))
+          + ' '.repeat(annoArgs[3]!.length) + annoArgs[4]!;
         changed = true;
+      }
+      // The open-enum marker `...` (`| ...` as the last case) — spec syntax
+      // the grammar predates. A same-width placeholder case keeps the body.
+      const ellipsis = line.match(/^(.*?\|\s*|\s*)\.\.\.(\s*)$/);
+      if (ellipsis && !line.includes('//')) {
+        line = lines[i] = ellipsis[1] + '___' + ellipsis[2];
+        changed = true;
+      }
+      // A bare `@!Name` compiler annotation (no arguments) — no grammar
+      // rule; blank the whole line.
+      const bangAnno = line.match(/^(\s*\|?)(\s*@![\w.]+\s*)$/);
+      if (bangAnno) {
+        line = lines[i] = bangAnno[1] + ' '.repeat(bangAnno[2]!.length);
+        changed = true;
+      }
+      // The MULTI-LINE form of the same (`@agent[` … `]` spanning lines) —
+      // blank from the `[` through the closing `]`; the bare `@agent` line
+      // that survives parses as a normal annotation.
+      if (inAnnoArgs) {
+        const close = line.indexOf(']');
+        if (close >= 0) {
+          line = lines[i] = ' '.repeat(close + 1) + line.slice(close + 1);
+          inAnnoArgs = false;
+        } else {
+          line = lines[i] = ' '.repeat(line.length);
+        }
+        changed = true;
+      } else {
+        const annoOpen = line.match(/^(\s*\|?\s*)(@!?[A-Za-z_][\w.]*)\[[^\]]*$/);
+        if (annoOpen) {
+          const keepName = !annoOpen[2]!.startsWith('@!');
+          const kept = annoOpen[1]! + (keepName ? annoOpen[2]! : ' '.repeat(annoOpen[2]!.length));
+          line = lines[i] = kept + ' '.repeat(line.length - kept.length);
+          inAnnoArgs = true;
+          changed = true;
+        }
+      }
+      // A `let`-binding as a NON-SOLE condition (`while (a && let x <- e)`)
+      // has no grammar rule — blank just the `let` keyword; the remaining
+      // `x <- e` parses as an expression and both operands keep extracting.
+      if (/\b(?:while|if)\s*\(/.test(line) && /(?:&&|\|\|)\s+let\s/.test(line)) {
+        line = lines[i] = line.replace(/((?:&&|\|\|)\s+)let(\s)/g, (_m, pre, ws) => pre + '   ' + ws);
+        changed = true;
+      }
+      // Cross-line form: the condition wraps after `&&`/`||` and the
+      // let-binding starts the next line.
+      const letCont = line.match(/^(\s*)let(\s)/);
+      if (letCont && i > 0 && /(?:&&|\|\|)\s*$/.test(lines[i - 1]!)) {
+        line = lines[i] = letCont[1] + '   ' + line.slice(letCont[1]!.length + 3);
+        changed = true;
+      }
+      // A continuation line starting with `|` (multi-line flag unions —
+      // `Flag.A` newline `| Flag.B`) — same gap as leading `+` below. Enum
+      // CASES also start with `|` and are real grammar: skip lines sitting
+      // directly inside an enum body.
+      const pipeCont = line.match(/^(\s*)\|\s/);
+      if (pipeCont && (enumBodyDepth < 0 || depthAtStart !== enumBodyDepth)) {
+        // Match-arm alternations (`case A` newline `| B => …`) parse
+        // natively — skip when the previous non-blank line is a `case` or a
+        // still-piped alternation line, or this line carries the arrow.
+        let pprev = i - 1;
+        while (pprev >= 0 && lines[pprev]!.trim() === '') pprev--;
+        const prevTrim = pprev >= 0 ? lines[pprev]!.trimStart() : '';
+        const isMatchAlt = /^case\b/.test(prevTrim) || prevTrim.startsWith('|') || line.includes('=>');
+        if (!isMatchAlt) {
+          line = lines[i] = pipeCont[1] + ' ' + line.slice(pipeCont[1]!.length + 1);
+          changed = true;
+        }
       }
       // A continuation line STARTING with a binary `+` (multi-line arithmetic
       // — `+ this.mLegend.getXOffset()`) has no grammar rule; blank the
@@ -363,6 +651,41 @@ export const cangjieExtractor: LanguageExtractor = {
         line = lines[i] = ' '.repeat(line.length);
         changed = true;
       }
+      // The grammar hardcodes `Range` as a builtin GENERIC type — a bare
+      // `: Range` type annotation (user-defined Range class) ERRORs. Swap in
+      // a same-width placeholder; the field/param still extracts (its type
+      // edge to the user's Range is lost, the lesser evil).
+      if (/:\s*\??Range\b/.test(line)) {
+        line = lines[i] = line.replace(/(:\s*\??)Range\b(?!\s*<)/g, '$1RangX');
+        changed = true;
+      }
+      // Bitwise NOT `~` (C-heritage code) — not in the grammar's operator
+      // set; the same-width prefix `!` parses identically for extraction.
+      // `~init` finalizers are real grammar and must stay.
+      if (/~(?!init\b)(?=[\w(])/.test(line)) {
+        line = lines[i] = line.replace(/~(?!init\b)(?=[\w(])/g, '!');
+        changed = true;
+      }
+      // Zig-style underscore literal suffixes (`0_u64`) — blank the suffix;
+      // the bare number parses and values are irrelevant to the graph.
+      if (/\d_[iu](?:8|16|32|64)\b/.test(line)) {
+        line = lines[i] = line.replace(/\b((?:0[xXoObB])?[\da-fA-F]*\d)_([iu](?:8|16|32|64))\b/g, (_m, num, suf) => num + ' '.repeat(suf.length + 1));
+        changed = true;
+      }
+      // A byte literal holding a double quote (`b'"'`) breaks the lexer
+      // (the rune form `'"'` is fine); content is irrelevant — blank it.
+      if (line.includes(`b'"'`)) {
+        line = lines[i] = line.replaceAll(`b'"'`, `b' '`);
+        changed = true;
+      }
+      // An escaped space (`"a\\ b"`) has no grammar escape rule — the
+      // backslash pairs with the following space either way.
+      if (/\\ /.test(line) && !/^\s*\/\//.test(line)) {
+        // Only an ODD run of backslashes escapes the space (`\\ ` is an
+        // escaped backslash FOLLOWED by a space — legal, leave it alone).
+        line = lines[i] = line.replace(/\\+ /g, (m) => ((m.length - 1) % 2 === 1 ? m.slice(0, -2) + '  ' : m));
+        changed = true;
+      }
       // A rune literal holding a dollar (`case '$' | …`) breaks the lexer
       // like the string forms above.
       if (line.includes("'$'")) {
@@ -372,11 +695,12 @@ export const cangjieExtractor: LanguageExtractor = {
       // `$` immediately before `)` only occurs inside string content (regex
       // patterns — `(?:\\s|>|$)`); the lexer treats it as a broken
       // interpolation. Content is irrelevant to extraction — blank it.
-      if (line.includes('$)') || /\$"/.test(line)) {
-        // `$"` (a regex end-anchor closing the string) breaks the lexer the
-        // same way — but `"$"` (lone-dollar literal) is handled above and
-        // legitimate interpolation is `${` or `$identifier`, never `$"`.
-        line = lines[i] = line.replace(/\$\)/g, ' )').replace(/\$(?=")/g, ' ');
+      if (line.includes('$)') || /\$["']/.test(line)) {
+        // `$"` / `$'` (a regex end-anchor closing the string) breaks the
+        // lexer the same way — but `"$"`/`'$'` (lone-dollar literals) are
+        // handled above and legitimate interpolation is `${` or
+        // `$identifier`, never `$"`.
+        line = lines[i] = line.replace(/\$\)/g, ' )').replace(/\$(?=["'])/g, ' ');
         changed = true;
       }
       // `from module import pkg.path.*` — cross-module import syntax the
@@ -386,6 +710,28 @@ export const cangjieExtractor: LanguageExtractor = {
       const fromImport = line.match(/^(\s*)(from\s+[\w.]+\s+)(?=import\b)/);
       if (fromImport) {
         line = lines[i] = fromImport[1] + ' '.repeat(fromImport[2]!.length) + line.slice(fromImport[1]!.length + fromImport[2]!.length);
+        changed = true;
+      }
+      // A trailing comma in a braced import list (`import a.{B, }`) — the
+      // grammar wants no dangling comma; blank it.
+      if (/^\s*(?:\w+\s+)?import\b.*,\s*}/.test(line)) {
+        line = lines[i] = line.replace(/,(\s*})/g, ' $1');
+        changed = true;
+      }
+      // Access-modified imports (`internal import x`, `protected import y`) —
+      // the newer cjpm convention the grammar predates. Blank the modifier.
+      const modImport = line.match(/^(\s*)((?:internal|protected|public|private)\s+)(?=import\b)/);
+      if (modImport) {
+        line = lines[i] = modImport[1] + ' '.repeat(modImport[2]!.length) + line.slice(modImport[1]!.length + modImport[2]!.length);
+        changed = true;
+      }
+      // Module-qualified package paths (`package cangjie_tpc::prism4cj`,
+      // `import cangjie_tpc::prism4cj.languages.*`) — the `::` separator has
+      // no grammar rule and ERRORs the whole file header. Same-width `__`
+      // keeps the path one parseable dotted identifier chain (the mangling is
+      // visible only in package/import records, never in symbols).
+      if (line.includes('::') && /^\s*(?:package\b|import\b|macro\s+package\b)/.test(line)) {
+        line = lines[i] = line.replace(/::/g, '__');
         changed = true;
       }
       // Supertype generic arguments — `<: ResponseBuilder<ArrayList<Any>>` —
@@ -419,11 +765,29 @@ export const cangjieExtractor: LanguageExtractor = {
       }
       const dot = line.match(/^(\s*)\.[A-Za-z_]/);
       if (dot) {
-        blankedDotOffsets.add(offset + dot[1]!.length);
-        lines[i] = dot[1] + ' ' + line.slice(dot[1]!.length + 1);
-        changed = true;
-        offset += line.length + 1;
-        continue;
+        // A chain hanging off a raw-string literal (`where #'…'#` newline
+        // `.regex(…)` newline `.matches(…)`) parses NATIVELY as an expression
+        // continuation — the whole chain must stay untouched. Only chains
+        // after a completed statement (`)`, `}`) need the blanking.
+        let prev = i - 1;
+        while (prev >= 0 && lines[prev]!.trim() === '') prev--;
+        const prevEnd = prev >= 0 ? lines[prev]!.trimEnd().slice(-1) : '';
+        // Directly inside an unclosed paren/bracket group (a multi-line
+        // condition or argument list) a leading-dot chain is a NATIVE
+        // expression continuation — but inside a BRACE block (statement
+        // context, e.g. a lambda body nested in that argument list) it still
+        // needs the blanking.
+        if (prevEnd === '#' || topAtStart === '(' || topAtStart === '[' || nativeChain) {
+          nativeChain = true;
+        } else {
+          blankedDotOffsets.add(offset + dot[1]!.length);
+          lines[i] = dot[1] + ' ' + line.slice(dot[1]!.length + 1);
+          changed = true;
+          offset += line.length + 1;
+          continue;
+        }
+      } else {
+        nativeChain = false;
       }
       const prop = line.match(/^(\s*)((?:(?:public|private|protected|internal|static|mut|open|override)\s+)*prop\s+[A-Za-z_]\w*\s*:[^{]*)$/);
       if (prop) {

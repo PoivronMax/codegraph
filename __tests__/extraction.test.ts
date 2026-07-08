@@ -11798,3 +11798,328 @@ let B = TestRunner.registerCreator("T") {OpenHarmonyTestRunner()}
     expect(byId[my!.fromNodeId]).toBe('A');
   });
 });
+
+describe('Cangjie 200-corpus grammar gaps', () => {
+  it('should parse single-quoted raw strings (scanner extension)', () => {
+    const code = `package t
+
+func f(): Unit {
+    let re = #'^-?(\\d+|0[xX][0-9a-fA-F]+)$'#
+    let re2 = ##"has "#" inside"##
+    use(re, re2)
+}
+func after(): Unit {}
+`;
+    const result = extractFromSource('rq.cj', code);
+    expect(result.nodes.find((n) => n.name === 'f')?.kind).toBe('function');
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('function');
+    expect(result.unresolvedReferences.some((r) => r.referenceName === 'use')).toBe(true);
+  });
+
+  it('should keep native leading-dot chains off raw-string guards intact', () => {
+    const code = `package t
+
+func f(x: DataString): Int64 {
+    match (x) {
+        case x: DataString where #'^\\d+$'#
+            .regex(solid: true)
+            .matches(x.toString()) => 1
+        case _ => 0
+    }
+}
+`;
+    const result = extractFromSource('guard.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('regex');
+    expect(names).toContain('matches');
+  });
+
+  it('should handle module-qualified packages and modified imports', () => {
+    const code = `package cangjie_tpc::prism4cj
+
+internal import cangjie_tpc::prism4cj.languages.*
+protected import std.io.*
+
+public class GrammarLocator {
+    func locate(): Unit {}
+}
+`;
+    const result = extractFromSource('gl.cj', code);
+    expect(result.nodes.find((n) => n.name === 'GrammarLocator')?.kind).toBe('class');
+    expect(result.nodes.find((n) => n.name === 'locate')?.kind).toBe('method');
+    expect(result.nodes.some((n) => n.kind === 'import')).toBe(true);
+  });
+
+  it('should extract receiver-syntax extension functions', () => {
+    const code = `package t
+
+private func String.padEnd(width: Int64): String {
+    return fill(width)
+}
+`;
+    const result = extractFromSource('pe.cj', code);
+    const fn = result.nodes.find((n) => n.name === 'padEnd');
+    expect(fn?.kind).toBe('function');
+    expect(result.unresolvedReferences.some((r) => r.referenceName === 'fill')).toBe(true);
+  });
+
+  it('should survive triple-quoted strings, keeping the surrounding structure', () => {
+    const code = `package t
+
+let PROMPT = """
+multi line
+content """ + "tail"
+
+func after(): Unit { work() }
+`;
+    const result = extractFromSource('tq.cj', code);
+    expect(result.nodes.find((n) => n.name === 'PROMPT')?.kind).toBe('constant');
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('function');
+  });
+
+  it('should survive backslash continuations, named-tuple returns, @When imports, and typed let-bindings', () => {
+    const code = `package t
+
+@When
+import std.core.Duration
+
+func dims(): (group: UInt32, flags: Int64) {
+    return (1, 2)
+}
+
+func g(): String {
+    return "abc" + \\
+        "def"
+}
+
+func h(m: Macro): Unit {
+    while (let md: MacroExpandDecl <- m.next()) { use(md) }
+}
+`;
+    const result = extractFromSource('mix.cj', code);
+    for (const name of ['dims', 'g', 'h']) {
+      expect(result.nodes.find((n) => n.name === name)?.kind).toBe('function');
+    }
+    expect(result.unresolvedReferences.some((r) => r.referenceName === 'use')).toBe(true);
+  });
+});
+
+describe('Cangjie 200-corpus grammar gaps (round 2)', () => {
+  it('should flatten nested block comments (spec allows nesting, lexer does not)', () => {
+    const code = `package t
+
+enum B {
+    | K
+    /* disabled:
+    /** doc comment inside */
+    public func s(): String {
+        match (this) { case K => "x" }
+    }*/
+    public func real(): String { "y" }
+}
+`;
+    const result = extractFromSource('nc.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.find((n) => n.name === 'real')?.kind).toBe('method');
+    expect(result.nodes.some((n) => n.name === 's')).toBe(false);
+  });
+
+  it('should keep enum bodies parseable around static let members', () => {
+    const code = `package t
+
+public enum Errno {
+    | EPERM
+    | ENOENT
+
+    public static let max: Int64 = 107
+
+    public static func of(code: Int64): Errno {
+        return EPERM
+    }
+}
+`;
+    const result = extractFromSource('en.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const members = result.nodes.filter((n) => n.kind === 'enum_member').map((n) => n.name);
+    expect(members).toEqual(['EPERM', 'ENOENT']);
+    expect(result.nodes.find((n) => n.name === 'of')?.kind).toBe('method');
+  });
+
+  it('should survive multi-line DSL macro invocations and empty quote()', () => {
+    const code = `package t
+
+@Enum[SimpleEnum](
+    Val1
+    Val2
+)
+
+@Test
+func test_after(): Unit {
+    var tokens = quote()
+    use(tokens)
+}
+`;
+    const result = extractFromSource('mm.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.find((n) => n.name === 'test_after')?.kind).toBe('function');
+    expect(result.unresolvedReferences.some((r) => r.referenceName === 'use')).toBe(true);
+  });
+
+  it('should keep leading-dot chains inside unclosed parens as native continuations', () => {
+    const code = `package t
+
+func f(content: Array<Byte>): Unit {
+    if (content.size > 0 && Parsing
+            .hasNonSpace(content)) {
+        work()
+    }
+}
+`;
+    const result = extractFromSource('pc.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('hasNonSpace');
+    expect(names).toContain('work');
+  });
+
+  it('should survive C-heritage lexeme gaps: ~, literal suffixes, b-quote, escaped space, bare Range', () => {
+    const code = `package t
+
+class Span {
+    public var text: String = ""
+    public var range: Range
+    public init() {}
+    ~init() {}
+}
+
+func align(mask: UInt64): UInt64 {
+    let limbs = [0_u64]
+    use(limbs, b'"', "a\\ b", ##""""##)
+    return (mask + 1) & ~mask
+}
+`;
+    const result = extractFromSource('cx.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.find((n) => n.name === 'Span')?.kind).toBe('class');
+    expect(result.nodes.find((n) => n.name === 'range')?.kind).toBe('field');
+    expect(result.nodes.find((n) => n.name === 'align')?.kind).toBe('function');
+  });
+
+  it('should survive non-sole let-binding conditions and $ before a closing quote', () => {
+    const code = `package t
+
+func f(server: Server, closed: Ref): Unit {
+    while (!closed.load() && let socket <- server.accept()) {
+        exec(socket)
+    }
+    let anchor = '^abc$'
+    use(anchor.regex(flags: [IgnoreCase]))
+}
+`;
+    const result = extractFromSource('lb.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('exec');
+    expect(names).toContain('accept');
+  });
+});
+
+describe('Cangjie ArkUI SDK wrapper grammar gaps', () => {
+  it('should handle @! compiler annotations (single-line, multi-line, bare, piped)', () => {
+    const code = `package t
+
+@!APILevel[
+    since: "22",
+    syscap: "SystemCapability.ArkUI.ArkUI.Full"
+]
+public class ActionSheet {
+    @!Hide
+    public func show(): Unit {
+        work()
+    }
+}
+`;
+    const result = extractFromSource('ba.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.find((n) => n.name === 'ActionSheet')?.kind).toBe('class');
+    expect(result.nodes.find((n) => n.name === 'show')?.kind).toBe('method');
+  });
+
+  it('should handle annotated open enums with piped cases and the ... marker', () => {
+    const code = `package t
+
+public enum DialogAlignment {
+    @!APILevel[
+        since: "22"
+    ]
+    Auto
+    |
+    @!APILevel[
+        since: "22"
+    ]
+    Vertical
+    | ...
+
+    func getValue(): Int32 {
+        match (this) {
+            case Auto => 0
+            case Vertical |
+                _ => 1
+        }
+    }
+}
+`;
+    const result = extractFromSource('oe.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const members = result.nodes.filter((n) => n.kind === 'enum_member').map((n) => n.name);
+    expect(members).toContain('Auto');
+    expect(members).toContain('Vertical');
+    expect(result.nodes.find((n) => n.name === 'getValue')?.kind).toBe('method');
+  });
+
+  it('should blank statement-context dot chains inside argument-list lambdas, keep native paren chains', () => {
+    const code = `package t
+
+class Cov {
+    func build() {
+        ForEach(
+            ITEMS,
+            itemGeneratorFunc: {
+                viewName: String, _: Int64 => Button(viewName)
+                .fontSize(12)
+                .width(47)
+            }
+        )
+    }
+}
+`;
+    const result = extractFromSource('bs.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('Button');
+    expect(names).toContain('.fontSize');
+  });
+
+  it('should handle flag-union pipe continuations, cross-line let conditions, and import trailing commas', () => {
+    const code = `package t
+
+import ohos.arkui.component.common.{CommonMethodComponent, }
+
+func f(cfg: Cfg): Unit {
+    let flags = BundleFlag.GET_A
+        | BundleFlag.GET_B
+    if (cfg.versions.contains(V1_2) &&
+        let Some(cs) <- cfg.entryView()) {
+        use(flags, cs)
+    }
+}
+`;
+    const result = extractFromSource('fu.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.some((n) => n.kind === 'import')).toBe(true);
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('entryView');
+    expect(names).toContain('use');
+  });
+});
