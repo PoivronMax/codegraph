@@ -30,6 +30,7 @@ enum TokenType {
 typedef struct {
   bool in_string;
   uint8_t delimiter_length;
+  char quote; // '"' or '\'' — Cangjie raw strings allow both, matched pairwise
 } Scanner;
 
 static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
@@ -49,13 +50,14 @@ static uint8_t count_and_consume(TSLexer *lexer, int32_t ch) {
 static bool scan_opening_delimiter(Scanner *s, TSLexer *lexer) {
   uint8_t hash_count = count_and_consume(lexer, '#');
 
-  if (hash_count == 0 || lexer->lookahead != '"') {
+  if (hash_count == 0 || (lexer->lookahead != '"' && lexer->lookahead != '\'')) {
     s->delimiter_length = 0;
     s->in_string = false;
     return false;
   }
 
-  advance(lexer); // consume '"'
+  s->quote = (char)lexer->lookahead;
+  advance(lexer); // consume the quote
   s->delimiter_length = hash_count;
   s->in_string = true;
   lexer->result_symbol = MULTI_LINE_RAW_STRING_START;
@@ -64,7 +66,7 @@ static bool scan_opening_delimiter(Scanner *s, TSLexer *lexer) {
 
 /* Closing delimiter: "#+ */
 static bool scan_closing_delimiter(Scanner *s, TSLexer *lexer) {
-  advance(lexer); // consume '"'
+  advance(lexer); // consume the quote
 
   uint8_t hash_count = count_and_consume(lexer, '#');
 
@@ -95,7 +97,7 @@ static bool scan_string_content(Scanner *s, TSLexer *lexer) {
   lexer->mark_end(lexer);
 
   for (;;) {
-    if (lexer->lookahead == '"') {
+    if (lexer->lookahead == s->quote) {
       lexer->mark_end(lexer); // content ends before this quote
       advance(lexer);
       uint8_t hash_count = count_and_consume(lexer, '#');
@@ -136,7 +138,8 @@ unsigned tree_sitter_cangjie_external_scanner_serialize(void *payload, char *buf
   Scanner *s = payload;
   buffer[0] = s->in_string ? 1 : 0;
   buffer[1] = (char)s->delimiter_length;
-  return 2;
+  buffer[2] = s->quote;
+  return 3;
 }
 
 void tree_sitter_cangjie_external_scanner_deserialize(void *payload, const char *buffer,
@@ -145,9 +148,11 @@ void tree_sitter_cangjie_external_scanner_deserialize(void *payload, const char 
   if (buffer != NULL && length >= 2) {
     s->in_string = buffer[0] != 0;
     s->delimiter_length = (uint8_t)buffer[1];
+    s->quote = length >= 3 ? buffer[2] : '"';
   } else {
     s->in_string = false;
     s->delimiter_length = 0;
+    s->quote = '"';
   }
 }
 
@@ -172,7 +177,7 @@ bool tree_sitter_cangjie_external_scanner_scan(void *payload, TSLexer *lexer,
   }
 
   if (valid_symbols[MULTI_LINE_RAW_STRING_END] && s->in_string &&
-      lexer->lookahead == '"') {
+      lexer->lookahead == s->quote) {
     return scan_closing_delimiter(s, lexer);
   }
 
