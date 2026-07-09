@@ -1726,9 +1726,13 @@ export function matchFuzzy(
   const callableKinds = new Set(['function', 'method', 'class']);
   const callableCandidates = applyLanguageGate(candidates.filter((n) => callableKinds.has(n.kind)), ref);
 
-  // Prefer same-language matches
+  // Prefer same-language matches. Cross-language is allowed only on an
+  // EXACT name (FFI bridges) — case-folding across languages is how a C++
+  // header's `std::string` ends up linked to an unrelated Cangjie `String`
+  // class (0.3-confidence noise, never a real edge).
   const sameLanguageCandidates = callableCandidates.filter(n => n.language === ref.language);
-  const finalCandidates = sameLanguageCandidates.length > 0 ? sameLanguageCandidates : callableCandidates;
+  const crossLanguageExact = callableCandidates.filter(n => n.name === ref.referenceName);
+  const finalCandidates = sameLanguageCandidates.length > 0 ? sameLanguageCandidates : crossLanguageExact;
 
   if (finalCandidates.length === 1) {
     const isCrossLanguage = finalCandidates[0]!.language !== ref.language;

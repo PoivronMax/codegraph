@@ -309,3 +309,48 @@ describe('Cangjie entry-registration files vs .gitignore', () => {
     ).toBe(true);
   });
 });
+
+describe('Cross-language fuzzy gate', () => {
+  let tmpDir: string | undefined;
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = undefined;
+  });
+
+  it('never case-folds a C++ builtin onto a Cangjie class', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-xlang-'));
+    fs.writeFileSync(
+      path.join(tmpDir, 'status.cpp'),
+      '#include <string>\n' +
+        'std::string GetErrorMessage() {\n' +
+        '  std::string message(getRaw());\n' +
+        '  return message;\n' +
+        '}\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'db_conn.cj'),
+      'package demo\n' +
+        '\n' +
+        'public class String {\n' +
+        '    public func size(): Int64 { 0 }\n' +
+        '}\n'
+    );
+
+    const cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+
+    const cjString = cg
+      .getNodesByKind('class')
+      .find((n) => n.name === 'String' && n.filePath.endsWith('.cj'));
+    expect(cjString).toBeTruthy();
+
+    // No edge from the C++ file may land on the Cangjie String class —
+    // `string` → `String` is a case-folded cross-language non-match.
+    const incoming = cg.getIncomingEdges(cjString!.id);
+    const fromCpp = incoming.filter((e) => {
+      const src = cg.getNode(e.source);
+      return src?.filePath.endsWith('.cpp');
+    });
+    expect(fromCpp).toHaveLength(0);
+  });
+});
