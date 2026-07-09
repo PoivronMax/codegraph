@@ -322,7 +322,7 @@ export const cangjieExtractor: LanguageExtractor = {
     let braceDepth = 0; // approximate brace depth (strings/comments stripped)
     const bracketStack: string[] = []; // open-bracket stack, same sanitization
     let enumBodyDepth = -1; // braceDepth of the innermost enum body, -1 outside
-    let inAnnoArgs = false; // inside a multi-line annotation argument list
+    let annoBracketDepth = 0; // unclosed `[` depth of a multi-line annotation argument list
     let macroParenDepth = 0; // inside a multi-line `@Macro[...](...)` body
     let commentDepth = 0; // block-comment nesting depth across lines
     for (let i = 0; i < lines.length; i++) {
@@ -330,8 +330,18 @@ export const cangjieExtractor: LanguageExtractor = {
       // Triple-quoted multi-line strings (\"\"\") — no grammar rule. Replace
       // the opener with a one-char literal and blank the rest through the
       // closer; content is irrelevant to extraction.
+      // First `"""` at/after `from` NOT escaped — an odd backslash run before
+      // it escapes the first quote (`\"""` inside the string must not close).
+      const findTq = (str: string, from: number): number => {
+        for (let at = str.indexOf('"""', from); at >= 0; at = str.indexOf('"""', at + 1)) {
+          let bs = 0;
+          while (at - 1 - bs >= 0 && str[at - 1 - bs] === '\\') bs++;
+          if (bs % 2 === 0) return at;
+        }
+        return -1;
+      };
       if (inTripleString) {
-        const close = line.indexOf('"""');
+        const close = findTq(line, 0);
         if (close >= 0) {
           // Blank through the closer, KEEP what follows (a comma, `)`, …).
           lines[i] = ' '.repeat(close + 3) + line.slice(close + 3);
@@ -346,9 +356,9 @@ export const cangjieExtractor: LanguageExtractor = {
       // Mask single-line raw strings first — `##""""##` legitimately contains
       // a `"""` substring that is NOT a triple-quote opener.
       const rawMasked = line.replace(/(##?)"[\s\S]*?"\1/g, (m) => ' '.repeat(m.length));
-      const tq = rawMasked.indexOf('"""');
+      const tq = findTq(rawMasked, 0);
       if (tq >= 0) {
-        const close = rawMasked.indexOf('"""', tq + 3);
+        const close = findTq(rawMasked, tq + 3);
         if (close >= 0) {
           // Single-line: collapse to a one-char literal, keep the tail.
           line = lines[i] = line.slice(0, tq) + '" "' + ' '.repeat(close - tq) + line.slice(close + 3);
@@ -357,6 +367,28 @@ export const cangjieExtractor: LanguageExtractor = {
           line = lines[i] = line.slice(0, tq) + '" "' + ' '.repeat(line.length - tq - 3);
         }
         changed = true;
+      }
+      // Allman-style braces: the lexer eats the newline after a function
+      // signature as a declaration terminator, so `func f(): Bool` NEWLINE
+      // `{` parses as a bodiless declaration plus an orphan block. Hoist the
+      // `{` onto the signature line (same total bytes, same line count: the
+      // signature line grows by ' {', this line's `{` is blanked; running
+      // byte offset and bracket stack are compensated).
+      const allman = line.match(/^(\s*)\{/);
+      if (allman) {
+        let prev = i - 1;
+        while (prev >= 0 && lines[prev]!.trim() === '') prev--;
+        const pl = prev >= 0 ? lines[prev]! : '';
+        const isDecl = /\b(?:func|init|prop|struct|enum|interface|extend|main|else|try|catch|finally|do|if|while|for)\b/.test(pl)
+          && /[)\w>]\s*$/.test(pl) && !/(?:=>|->|[={,(|&])\s*$/.test(pl) && !pl.trimStart().startsWith('//');
+        if (prev >= 0 && isDecl) {
+          lines[prev] = pl.trimEnd() + ' {' + ' '.repeat(pl.length - pl.trimEnd().length);
+          line = lines[i] = allman[1] + ' ' + line.slice(allman[1]!.length + 1);
+          offset += 2;
+          braceDepth++;
+          bracketStack.push('{');
+          changed = true;
+        }
       }
       // Unified comment scan. Two jobs: (a) the spec allows NESTED block
       // comments but the grammar's lexer ends at the first `*/` — blank the
@@ -459,6 +491,13 @@ export const cangjieExtractor: LanguageExtractor = {
         line = lines[i] = line.replace(/\bquote\(\)/g, 'quote_x');
         changed = true;
       }
+      // Generic-type token trees inside a quote (`quote(IJsonAdapter<$(t)>)`)
+      // — the quoted `<...>` group cannot parse as an expression; blank it
+      // (the base identifier still extracts as a reference).
+      if (/\bquote\([^()]*?\w</.test(line)) {
+        line = lines[i] = line.replace(/(\bquote\([^()]*?\w)<([^<>]*)>/g, (_m, pre, inner) => pre + ' '.repeat(inner.length + 2));
+        changed = true;
+      }
       // Backslash line continuations — blank the trailing backslash; a
       // binary operator left dangling at end of line parses fine.
       const contBs = line.match(/^(.*\S.*)\\\s*$/);
@@ -515,10 +554,10 @@ export const cangjieExtractor: LanguageExtractor = {
         line = lines[i] = line.slice(0, at) + ' '.repeat(recvFn[2]!.length) + line.slice(at + recvFn[2]!.length);
         changed = true;
       }
-      const callOp = line.match(/operator\s+func\s+\(\)/);
+      const callOp = line.match(/operator\s+func\s*\(\)/);
       if (callOp) {
         substitutedOperators.set(i + 1, '()');
-        line = lines[i] = line.replace(/(operator\s+func\s+)\(\)/, '$1==');
+        line = lines[i] = line.replace(/(operator\s+func\s*)\(\)/, '$1==');
         changed = true;
       }
       // Multi-line DSL macro invocation — `@Enum[SimpleEnum](` newline
@@ -581,23 +620,34 @@ export const cangjieExtractor: LanguageExtractor = {
       // The MULTI-LINE form of the same (`@agent[` … `]` spanning lines) —
       // blank from the `[` through the closing `]`; the bare `@agent` line
       // that survives parses as a normal annotation.
-      if (inAnnoArgs) {
-        const close = line.indexOf(']');
-        if (close >= 0) {
-          line = lines[i] = ' '.repeat(close + 1) + line.slice(close + 1);
-          inAnnoArgs = false;
-        } else {
-          line = lines[i] = ' '.repeat(line.length);
+      if (annoBracketDepth > 0) {
+        // The argument list may hold NESTED brackets (`examples: [...]`) —
+        // blank through the `]` that returns the depth to zero.
+        let cut = -1;
+        for (let j = 0; j < line.length; j++) {
+          if (line[j] === '[') annoBracketDepth++;
+          else if (line[j] === ']') {
+            annoBracketDepth--;
+            if (annoBracketDepth === 0) { cut = j; break; }
+          }
         }
+        line = lines[i] = cut >= 0 ? ' '.repeat(cut + 1) + line.slice(cut + 1) : ' '.repeat(line.length);
         changed = true;
       } else {
-        const annoOpen = line.match(/^(\s*\|?\s*)(@!?[A-Za-z_][\w.]*)\[[^\]]*$/);
+        const annoOpen = line.match(/^(\s*\|?\s*)(@!?[A-Za-z_][\w.]*)\[/);
         if (annoOpen) {
-          const keepName = !annoOpen[2]!.startsWith('@!');
-          const kept = annoOpen[1]! + (keepName ? annoOpen[2]! : ' '.repeat(annoOpen[2]!.length));
-          line = lines[i] = kept + ' '.repeat(line.length - kept.length);
-          inAnnoArgs = true;
-          changed = true;
+          let depth = 0;
+          for (const ch of line.slice(annoOpen[0]!.length - 1)) {
+            if (ch === '[') depth++;
+            else if (ch === ']') depth--;
+          }
+          if (depth > 0) {
+            const keepName = !annoOpen[2]!.startsWith('@!');
+            const kept = annoOpen[1]! + (keepName ? annoOpen[2]! : ' '.repeat(annoOpen[2]!.length));
+            line = lines[i] = kept + ' '.repeat(line.length - kept.length);
+            annoBracketDepth = depth;
+            changed = true;
+          }
         }
       }
       // A `let`-binding as a NON-SOLE condition (`while (a && let x <- e)`)
@@ -684,6 +734,34 @@ export const cangjieExtractor: LanguageExtractor = {
         // Only an ODD run of backslashes escapes the space (`\\ ` is an
         // escaped backslash FOLLOWED by a space — legal, leave it alone).
         line = lines[i] = line.replace(/\\+ /g, (m) => ((m.length - 1) % 2 === 1 ? m.slice(0, -2) + '  ' : m));
+        changed = true;
+      }
+      // Multi-dimensional index access (`m[l1, l2]`) — the grammar's index
+      // suffix takes ONE expression; a same-width `+` keeps every operand
+      // referenced (values are irrelevant to the graph). Array LITERALS
+      // (`= [1, 2]`) parse natively — only matches after a value expression.
+      if (/[\w)\]]\[[^\[\]]*,/.test(line)) {
+        line = lines[i] = line.replace(/([\w)\]])(\[[^\[\]"']*,[^\[\]"']*\])/g,
+          (_m, pre, grp) => pre + grp.replace(/,/g, '+'));
+        changed = true;
+      }
+      // Byte-string literals (`b"pwd"`) — no grammar rule; blank the prefix,
+      // the plain string parses at the same offsets.
+      if (/(?:^|[^\w"'])b"/.test(line)) {
+        line = lines[i] = line.replace(/(^|[^\w"'])b(?=")/g, '$1 ');
+        changed = true;
+      }
+      // The full-range index `a[..]` (slice-all) — no grammar rule for a
+      // bare open range; a same-width literal index keeps the statement.
+      if (line.includes('[..]')) {
+        line = lines[i] = line.replaceAll('[..]', '[ 0]');
+        changed = true;
+      }
+      // An annotation/macro argument list in EXPRESSION position
+      // (`let r = @LbRequest[k = "v"]()`) — the line-start rules above only
+      // cover declaration-site annotations; blank the bracket group here too.
+      if (/=\s*@[A-Za-z_][\w.]*\[/.test(line)) {
+        line = lines[i] = line.replace(/(@[A-Za-z_][\w.]*)\[[^\]]*\]/g, (m, name) => name + ' '.repeat(m.length - name.length));
         changed = true;
       }
       // A rune literal holding a dollar (`case '$' | …`) breaks the lexer

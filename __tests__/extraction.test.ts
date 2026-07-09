@@ -12123,3 +12123,100 @@ func f(cfg: Cfg): Unit {
     expect(names).toContain('use');
   });
 });
+
+describe('Cangjie TPC gap-round grammar fixes', () => {
+  it('should hoist Allman-style braces onto the signature line', () => {
+    const code = `package t
+
+func IsPositive(arr: Array<Int64>): Bool
+{
+    for (i in arr) {
+        check(i)
+    }
+    return true
+}
+
+class C {
+    public init(persist!: String = "") {
+        if (persist == "") {
+            work()
+        }
+        else
+        {
+            other(persist)
+        }
+    }
+}
+`;
+    const result = extractFromSource('al.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const fn = result.nodes.find((n) => n.name === 'IsPositive');
+    expect(fn?.kind).toBe('function');
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('check');
+    expect(names).toContain('other');
+  });
+
+  it('should handle the no-space call operator, multi-dim indexing, [..], and byte strings', () => {
+    const code = `package t
+
+class Model {
+    public operator func()(sentences: Array<String>): Bool {
+        return score(sentences)
+    }
+}
+
+func f(mask: Tensor, state: Array<Int64>): Unit {
+    let v = Float32(mask[l1, l2])
+    state[..] = seed()
+    let pwd = b"pwd"
+    use(v, pwd)
+}
+`;
+    const result = extractFromSource('cc.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.find((n) => n.name === 'operator ()')).toBeTruthy();
+    const names = result.unresolvedReferences.filter((r) => r.referenceKind === 'calls').map((r) => r.referenceName);
+    expect(names).toContain('score');
+    expect(names).toContain('seed');
+  });
+
+  it('should blank nested-bracket multi-line annotations and expression-position macro args', () => {
+    const code = `package t
+
+@Tool[
+    description: """
+    Evaluates code.
+    """,
+    examples: [
+        "run(\\"x\\")"
+    ]
+]
+public func codeInterpreter(code: String): String {
+    let response = @LbRequest[lbProvider = "p", reqHandler = "h"]()
+    return handle(response)
+}
+`;
+    const result = extractFromSource('nb.cj', code);
+    expect(result.errors).toHaveLength(0);
+    const fn = result.nodes.find((n) => n.name === 'codeInterpreter');
+    expect(fn?.kind).toBe('function');
+    expect(result.unresolvedReferences.some((r) => r.referenceName === 'handle')).toBe(true);
+  });
+
+  it('should keep escaped triple quotes inside multi-line strings from closing them', () => {
+    const code = `package t
+
+let SAMPLE = """
+val str = \\"""
+inner kotlin content
+\\"""
+real end """
+
+func after(): Unit { work() }
+`;
+    const result = extractFromSource('etq.cj', code);
+    expect(result.errors).toHaveLength(0);
+    expect(result.nodes.find((n) => n.name === 'after')?.kind).toBe('function');
+  });
+});
