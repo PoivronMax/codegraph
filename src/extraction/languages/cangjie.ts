@@ -55,6 +55,35 @@ let sameLineAnnotations = new Map<number, string[]>();
  */
 let substitutedOperators = new Map<number, string>();
 
+/**
+ * Operator symbols this FILE declares via `operator func <op>` — written by
+ * preParse, read by the binary-operator call extraction (tree-sitter.ts).
+ * Operator INVOCATIONS (`a == b`) are emitted as call refs only for these:
+ * gating on a same-file declaration keeps the ref volume at zero for the
+ * overwhelmingly common primitive-operator lines, while covering the pattern
+ * that actually occurs (a type defining `==` and comparing itself in the
+ * same file). Cross-file operator usage is a documented gap.
+ */
+let declaredOperators = new Set<string>();
+
+export function cangjieFileDeclaredOperators(): Set<string> {
+  return declaredOperators;
+}
+
+/**
+ * Receiver root of a binary-operator invocation's LEFT operand:
+ * 'this' | 'super' | simple identifier | '#expr'.
+ */
+export function cangjieOperandRoot(node: SyntaxNode, source: string): string {
+  const r = unwrapSingle(node);
+  if (r.type === 'thisSuperExpression') return getNodeText(r, source).trim();
+  if (r.type === 'identifier' || r.type === 'varBindingPattern' || r.type === 'scoped_identifier') {
+    const text = getNodeText(r, source).trim();
+    if (/^[A-Za-z_]\w*$/.test(text)) return text;
+  }
+  return '#expr';
+}
+
 /** Leftmost name leaf of a postfix chain (its receiver root). */
 function chainRoot(expr: SyntaxNode): SyntaxNode | null {
   let n: SyntaxNode | null = expr;
@@ -123,10 +152,21 @@ export function cangjieCalleeName(expr: SyntaxNode | null, source: string): stri
         return blankedDotOffsets.has(expr.startIndex - 1) ? `.${text}` : text;
       }
       case 'atomicVariable':
-      case 'fieldAccess':
-        // Both carry a single name child (fieldAccess: `.name` → atomicVariable)
-        expr = expr.namedChildren.find((c) => c !== null) ?? null;
+      case 'fieldAccess': {
+        const inner = expr.namedChildren.find((c) => c !== null) ?? null;
+        // Generic instantiation (`DefaultPayloadEmitHandler<T>()`) parses as
+        // atomicVariable[typeArguments] with the base name an ANONYMOUS token
+        // — the unwrap would land on typeArguments and lose the callee.
+        if (expr.type === 'atomicVariable' && inner?.type === 'typeArguments') {
+          const base = getNodeText(expr, source).split('<')[0]!.trim();
+          if (/^[A-Za-z_]\w*$/.test(base)) {
+            return blankedDotOffsets.has(expr.startIndex - 1) ? `.${base}` : base;
+          }
+          return undefined;
+        }
+        expr = inner;
         continue;
+      }
       case 'postfixExpression': {
         const children = expr.namedChildren.filter((c) => c !== null);
         const last = children[children.length - 1] ?? null;
@@ -166,6 +206,92 @@ export function cangjieCalleeName(expr: SyntaxNode | null, source: string): stri
     }
   }
   return undefined;
+}
+
+/**
+ * Callee name PLUS the receiver root of a Cangjie call site — the resolution
+ * side uses the receiver to gate method candidates by type instead of
+ * defaulting to same-file preference (which bound `value.toString()` to
+ * whatever `toString` the host file declared).
+ *
+ * receiver encoding:
+ *   'this' / 'super'   explicit self / supertype dispatch
+ *   'this.<field>'     field receiver (`this.progressBar.getPathCmd()`)
+ *   '<identifier>'     simple-name receiver (`out.append(x)`) — a local,
+ *                      parameter, field, or a TYPE name (static call)
+ *   '#expr'            computed receiver (chained call, index, literal…)
+ *   undefined          bare call (`helper()`) — implicit this or free function
+ */
+export function cangjieCallInfo(
+  expr: SyntaxNode | null,
+  source: string,
+): { name: string; receiver?: string } | undefined {
+  const name = cangjieCalleeName(expr, source);
+  if (!name) return undefined;
+  if (name.startsWith('.')) return { name }; // UI attribute chain — hard-gated elsewhere
+  if (!expr) return { name };
+  if (expr.type === 'thisSuperExpression') {
+    // `this(...)` ctor delegation — scope to the enclosing type's own inits.
+    return { name, receiver: 'this' };
+  }
+  const receiver = classifyReceiver(expr, source);
+  return receiver ? { name, receiver } : { name };
+}
+
+/** Unwrap single-child postfix/atomic wrappers to the meaningful node. */
+function unwrapSingle(node: SyntaxNode): SyntaxNode {
+  let n = node;
+  for (let depth = 0; depth < 8; depth++) {
+    if (n.type === 'postfixExpression' || n.type === 'atomicVariable') {
+      const kids = n.namedChildren.filter((c) => c !== null);
+      if (kids.length === 1) {
+        n = kids[0]!;
+        continue;
+      }
+    }
+    break;
+  }
+  return n;
+}
+
+function classifyReceiver(expr: SyntaxNode, source: string): string | undefined {
+  if (expr.type !== 'postfixExpression') return undefined; // bare identifier call
+  const kids = expr.namedChildren.filter((c) => c !== null);
+  const last = kids[kids.length - 1];
+  if (!last || last.type !== 'fieldAccess') return undefined; // not a method-call shape
+  if (kids.length !== 2) return '#expr';
+  const r = unwrapSingle(kids[0]!);
+  if (r.type === 'thisSuperExpression') return getNodeText(r, source).trim();
+  if (r.type === 'identifier' || r.type === 'varBindingPattern' || r.type === 'scoped_identifier') {
+    const text = getNodeText(r, source).trim();
+    return /^[A-Za-z_]\w*$/.test(text) ? text : '#expr';
+  }
+  if (r.type === 'postfixExpression') {
+    const rk = r.namedChildren.filter((c) => c !== null);
+    const rLast = rk[rk.length - 1];
+    if (
+      rk.length === 2 &&
+      rLast?.type === 'fieldAccess' &&
+      unwrapSingle(rk[0]!).type === 'thisSuperExpression' &&
+      getNodeText(unwrapSingle(rk[0]!), source).trim() === 'this'
+    ) {
+      const field = getNodeText(rLast, source).replace(/^[\s.]+/, '').trim();
+      if (/^[A-Za-z_]\w*$/.test(field)) return `this.${field}`;
+    }
+    // Immediate-call receiver: `LUDecomposition(this).det()` /
+    // `addState(k).addEmit(...)` — record what was called so resolution can
+    // type the receiver (constructed type, or the callee's return type).
+    if (rk.length === 2 && rLast?.type === 'callSuffix') {
+      const base = unwrapSingle(rk[0]!);
+      if (base.type === 'identifier' || base.type === 'varBindingPattern' || base.type === 'atomicVariable') {
+        const text = getNodeText(base, source).split('<')[0]!.trim();
+        if (/^[A-Za-z_]\w*$/.test(text)) {
+          return /^[A-Z]/.test(text) ? `#new:${text}` : `#call:${text}`;
+        }
+      }
+    }
+  }
+  return '#expr';
 }
 
 /**
@@ -314,6 +440,7 @@ export const cangjieExtractor: LanguageExtractor = {
     blankedDotOffsets = new Set();
     sameLineAnnotations = new Map();
     substitutedOperators = new Map();
+    declaredOperators = new Set();
     const lines = source.split('\n');
     let changed = false;
     let offset = 0;
@@ -554,6 +681,8 @@ export const cangjieExtractor: LanguageExtractor = {
         line = lines[i] = line.slice(0, at) + ' '.repeat(recvFn[2]!.length) + line.slice(at + recvFn[2]!.length);
         changed = true;
       }
+      const opDecl = line.match(/\boperator\s+(?:override\s+)?func\s*([^\s(<]+|\[\])/);
+      if (opDecl) declaredOperators.add(opDecl[1]!);
       const callOp = line.match(/operator\s+func\s*\(\)/);
       if (callOp) {
         substitutedOperators.set(i + 1, '()');
@@ -919,7 +1048,7 @@ export const cangjieExtractor: LanguageExtractor = {
   // which produces NO callSuffix at all) hanging off a `postfixExpression`;
   // the callee is the suffix's preceding sibling, resolved structurally by
   // cangjieCalleeName via the cangjie branch in extractCall (tree-sitter.ts).
-  callTypes: ['callSuffix', 'trailingLambdaExpression'],
+  callTypes: ['callSuffix', 'trailingLambdaExpression', 'binaryExpreesion'],
   variableTypes: [],
   // propertyDefinition is handled entirely by the visitNode hook below (the
   // core's extractProperty neither finds `propertyName` nor visits the

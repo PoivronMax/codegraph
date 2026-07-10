@@ -23,7 +23,36 @@ import { isGeneratedFile } from './generated-detection';
 import type { LanguageExtractor, ExtractorContext } from './tree-sitter-types';
 import { EXTRACTORS } from './languages';
 import { stripCppTemplateArgs } from './languages/c-cpp';
-import { cangjieCalleeName } from './languages/cangjie';
+import { cangjieCallInfo, cangjieFileDeclaredOperators, cangjieOperandRoot } from './languages/cangjie';
+
+/**
+ * One-char literal-shape hint for a Cangjie call argument (see
+ * UnresolvedReference.argTypes): only shapes knowable WITHOUT type checking.
+ */
+function cangjieArgHint(arg: { type: string; text: string }, _source: string): string {
+  switch (arg.type) {
+    case 'stringLiteral': {
+      const t = arg.text.trimStart();
+      return t.startsWith("'") ? 'r' : 's';
+    }
+    case 'integerLiteral':
+      return 'i';
+    case 'floatLiteral':
+      return 'f';
+    case 'arrayLiteral':
+      return 'a';
+    case 'lambdaExpression':
+      return 'l';
+    case 'atomicVariable': {
+      const t = arg.text.trim();
+      if (t === 'true' || t === 'false') return 'b';
+      if (t === 'None') return 'n';
+      return '?';
+    }
+    default:
+      return '?';
+  }
+}
 import { LiquidExtractor } from './liquid-extractor';
 import { RazorExtractor } from './razor-extractor';
 import { SvelteExtractor } from './svelte-extractor';
@@ -382,6 +411,11 @@ export class TreeSitterExtractor {
   private fileScopeValueCounts = new Map<string, number>(); // file-scope nodes per name (conditional-def detection)
   private valueRefScopes: Array<{ id: string; node: SyntaxNode; name: string }> = [];
   private errors: ExtractionError[] = [];
+  // Cangjie call-site accounting: when a file's every call suffix resolves to
+  // no static callee, its calls edges are silently absent — surface that as a
+  // files.errors warning instead of indistinguishable-from-correct emptiness.
+  private cangjieCallSitesEmitted = 0;
+  private cangjieCallSitesSuppressed = 0;
   private extractor: LanguageExtractor | null = null;
   private nodeStack: string[] = []; // Stack of parent node IDs
   // C/C++ enclosing `namespace ns { … }` names, prepended to every contained
@@ -531,6 +565,20 @@ export class TreeSitterExtractor {
       }
       // Release source string to reduce GC pressure
       this.source = '';
+    }
+
+    // Wholesale call suppression is invisible in every downstream signal
+    // (files.errors empty, unresolved_refs empty) — record it (#Defect-4).
+    if (
+      this.language === 'cangjie' &&
+      this.cangjieCallSitesEmitted === 0 &&
+      this.cangjieCallSitesSuppressed >= 5
+    ) {
+      this.errors.push({
+        message: `cangjie: all ${this.cangjieCallSitesSuppressed} call sites in this file have no statically-nameable callee (operator/computed/chained targets) — calls edges for this file are absent by suppression, not by resolution`,
+        filePath: this.filePath,
+        severity: 'warning',
+      });
     }
 
     return {
@@ -3639,6 +3687,69 @@ export class TreeSitterExtractor {
     // no name — the callSuffix already recorded that call — so nothing
     // double-emits.
     if (this.language === 'cangjie') {
+      // Operator INVOCATION (`this == that`) — a call of a user-defined
+      // `operator func`. Emitted only when this file declares the operator
+      // (see cangjieFileDeclaredOperators); the left operand is the receiver.
+      if (node.type === 'binaryExpreesion') {
+        // Mis-parsed generic instantiation: in ARGUMENT/return position the
+        // grammar reads `Payload<T>(args)` as a comparison chain
+        // `(Payload < T) > (args)`. Fingerprint: a `>` binary whose left is a
+        // `<` binary rooted at a CAPITALIZED identifier and whose right is a
+        // tuple/parenthesized argument pack — no real comparison has that
+        // shape. Reconstruct the constructor call.
+        const bKids = node.namedChildren.filter((c) => c !== null);
+        const hasGt = node.children.some((c) => c && !c.isNamed && c.type === '>');
+        if (
+          hasGt &&
+          bKids.length === 2 &&
+          bKids[0]!.type === 'binaryExpreesion' &&
+          (bKids[1]!.type === 'tupleExpression' || bKids[1]!.type === 'parenthesizedExpression' || bKids[1]!.type === 'unitExpression')
+        ) {
+          const inner = bKids[0]!;
+          const hasLt = inner.children.some((c) => c && !c.isNamed && c.type === '<');
+          const innerKids = inner.namedChildren.filter((c) => c !== null);
+          if (hasLt && innerKids.length === 2) {
+            const baseText = getNodeText(innerKids[0]!, this.source).trim();
+            if (/^[A-Z]\w*$/.test(baseText)) {
+              const pack = bKids[1]!;
+              let argCount = 0;
+              let argTypes = '';
+              for (const arg of pack.namedChildren) {
+                if (!arg) continue;
+                argCount++;
+                argTypes += cangjieArgHint(arg, this.source);
+              }
+              this.unresolvedReferences.push({
+                fromNodeId: callerId,
+                referenceName: baseText,
+                referenceKind: 'calls',
+                line: pack.startPosition.row + 1,
+                column: pack.startPosition.column,
+                argCount,
+                argTypes,
+              });
+              this.cangjieCallSitesEmitted++;
+              return;
+            }
+          }
+        }
+        const opTok = node.children.find(
+          (c) => c && !c.isNamed && cangjieFileDeclaredOperators().has(c.type)
+        );
+        const left = node.namedChildren.find((c) => c !== null);
+        if (opTok && left) {
+          this.unresolvedReferences.push({
+            fromNodeId: callerId,
+            referenceName: `operator ${opTok.type}`,
+            referenceKind: 'calls',
+            line: opTok.startPosition.row + 1,
+            column: opTok.startPosition.column,
+            argCount: 1,
+            receiver: cangjieOperandRoot(left, this.source),
+          });
+        }
+        return;
+      }
       if (node.type !== 'callSuffix' && node.type !== 'trailingLambdaExpression') return;
       const parent = node.parent;
       if (!parent) return;
@@ -3648,14 +3759,45 @@ export class TreeSitterExtractor {
         if (sibling.startIndex >= node.startIndex) break;
         prev = sibling;
       }
-      const calleeName = cangjieCalleeName(prev, this.source);
-      if (calleeName) {
+      const info = cangjieCallInfo(prev, this.source);
+      if (!info) this.cangjieCallSitesSuppressed++;
+      if (info) {
+        this.cangjieCallSitesEmitted++;
+        // Top-level argument count for overload disambiguation. Named
+        // arguments parse as (varBindingPattern, value) pairs — count only
+        // the values. A trailing lambda after the parens is one more
+        // argument; a paren-less trailing-lambda call passes exactly one.
+        let argCount: number;
+        let argTypes = '';
+        let named = false;
+        if (node.type === 'callSuffix') {
+          argCount = 0;
+          for (const arg of node.namedChildren) {
+            if (!arg) continue;
+            if (arg.type === 'varBindingPattern') {
+              named = true; // named argument label — positional hints unreliable
+              continue;
+            }
+            argCount++;
+            argTypes += cangjieArgHint(arg, this.source);
+          }
+          if (node.nextNamedSibling?.type === 'trailingLambdaExpression') {
+            argCount++;
+            argTypes += 'l';
+          }
+        } else {
+          argCount = 1;
+          argTypes = 'l';
+        }
         this.unresolvedReferences.push({
           fromNodeId: callerId,
-          referenceName: calleeName,
+          referenceName: info.name,
           referenceKind: 'calls',
           line: node.startPosition.row + 1,
           column: node.startPosition.column,
+          argCount,
+          receiver: info.receiver,
+          argTypes: named ? '!' + argTypes : argTypes,
         });
       }
       return;
