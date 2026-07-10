@@ -9,7 +9,7 @@ import { SqliteDatabase } from './sqlite-adapter';
 /**
  * Current schema version
  */
-export const CURRENT_SCHEMA_VERSION = 7;
+export const CURRENT_SCHEMA_VERSION = 8;
 
 /**
  * Migration definition
@@ -117,6 +117,31 @@ const migrations: Migration[] = [
           PRIMARY KEY (segment, name)
         ) WITHOUT ROWID;
       `);
+    },
+  },
+  {
+    version: 8,
+    description:
+      'Add arg_count and receiver columns to unresolved_refs (call-site overload arity + receiver-aware method resolution)',
+    up: (db) => {
+      // DDL only. All columns are nullable; rows written by older versions
+      // simply carry NULL and resolve exactly as before. ALTER ADD COLUMN is
+      // not idempotent, so probe first — a database freshly created from
+      // schema.sql already has the columns while its recorded version may
+      // still be older (the db-perf migration fixtures do exactly that).
+      const existing = new Set(
+        (db.prepare('PRAGMA table_info(unresolved_refs)').all() as Array<{ name: string }>)
+          .map((c) => c.name)
+      );
+      for (const [col, type] of [
+        ['arg_count', 'INTEGER'],
+        ['receiver', 'TEXT'],
+        ['arg_types', 'TEXT'],
+      ] as const) {
+        if (!existing.has(col)) {
+          db.exec(`ALTER TABLE unresolved_refs ADD COLUMN ${col} ${type};`);
+        }
+      }
     },
   },
 ];

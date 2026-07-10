@@ -319,6 +319,29 @@ export interface UnresolvedReference {
   /** File path where reference occurs (denormalized for performance) */
   filePath?: string;
 
+  /**
+   * Call-site top-level argument count (a trailing lambda counts as one).
+   * Emitted by extractors whose language overloads by arity (Cangjie), so
+   * resolution can pick among same-name overloads. Optional — languages that
+   * don't emit it resolve exactly as before.
+   */
+  argCount?: number;
+
+  /**
+   * Method-call receiver root: 'this' | 'super' | 'this.<field>' | a simple
+   * identifier | '#expr' (computed receiver). Absent for bare calls.
+   * Emitted by the Cangjie extractor for receiver-aware method resolution.
+   */
+  receiver?: string;
+
+  /**
+   * Compact literal-shape hints for each call-site argument, one char per
+   * argument: s(tring) r(une) i(nt) f(loat) b(ool) a(rray) l(ambda) n(one) or
+   * '?' (unknown). '!' as the first char marks a call using named arguments
+   * (positional alignment unreliable — resolution skips hint filtering).
+   */
+  argTypes?: string;
+
   /** Language of the source file (denormalized for performance) */
   language?: Language;
 

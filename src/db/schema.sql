@@ -78,6 +78,9 @@ CREATE TABLE IF NOT EXISTS unresolved_refs (
     candidates TEXT, -- JSON array
     file_path TEXT NOT NULL DEFAULT '',
     language TEXT NOT NULL DEFAULT 'unknown',
+    arg_count INTEGER, -- call-site argument count (overload disambiguation)
+    receiver TEXT, -- method-call receiver root ('this'|'super'|'this.<field>'|identifier|'#expr')
+    arg_types TEXT, -- literal-shape hints per argument (s/r/i/f/b/a/l/n/?)
     FOREIGN KEY (from_node_id) REFERENCES nodes(id) ON DELETE CASCADE
 );
 

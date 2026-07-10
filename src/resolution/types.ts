@@ -26,6 +26,12 @@ export interface UnresolvedRef {
   language: Language;
   /** Possible qualified names it might resolve to */
   candidates?: string[];
+  /** Call-site top-level argument count (trailing lambda counts as one). */
+  argCount?: number;
+  /** Method-call receiver root ('this' | 'super' | 'this.<field>' | identifier | '#expr'). */
+  receiver?: string;
+  /** Literal-shape hints per argument (see UnresolvedReference.argTypes). */
+  argTypes?: string;
 }
 
 /**
@@ -39,7 +45,7 @@ export interface ResolvedRef {
   /** Confidence score (0-1) */
   confidence: number;
   /** How it was resolved */
-  resolvedBy: 'exact-match' | 'import' | 'qualified-name' | 'framework' | 'fuzzy' | 'instance-method' | 'file-path' | 'function-ref';
+  resolvedBy: 'exact-match' | 'import' | 'qualified-name' | 'framework' | 'fuzzy' | 'instance-method' | 'file-path' | 'function-ref' | 'overload-ambiguous';
 }
 
 /**

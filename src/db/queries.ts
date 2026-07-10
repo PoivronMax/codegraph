@@ -109,6 +109,9 @@ interface UnresolvedRefRow {
   candidates: string | null;
   file_path: string;
   language: string;
+  arg_count: number | null;
+  receiver: string | null;
+  arg_types: string | null;
 }
 
 /**
@@ -1714,8 +1717,8 @@ export class QueryBuilder {
   insertUnresolvedRef(ref: UnresolvedReference): void {
     if (!this.stmts.insertUnresolved) {
       this.stmts.insertUnresolved = this.db.prepare(`
-        INSERT INTO unresolved_refs (from_node_id, reference_name, reference_kind, line, col, candidates, file_path, language)
-        VALUES (@fromNodeId, @referenceName, @referenceKind, @line, @col, @candidates, @filePath, @language)
+        INSERT INTO unresolved_refs (from_node_id, reference_name, reference_kind, line, col, candidates, file_path, language, arg_count, receiver, arg_types)
+        VALUES (@fromNodeId, @referenceName, @referenceKind, @line, @col, @candidates, @filePath, @language, @argCount, @receiver, @argTypes)
       `);
     }
 
@@ -1728,6 +1731,9 @@ export class QueryBuilder {
       candidates: ref.candidates ? JSON.stringify(ref.candidates) : null,
       filePath: ref.filePath ?? '',
       language: ref.language ?? 'unknown',
+      argCount: ref.argCount ?? null,
+      receiver: ref.receiver ?? null,
+      argTypes: ref.argTypes ?? null,
     });
   }
 
@@ -1773,6 +1779,9 @@ export class QueryBuilder {
       line: row.line,
       column: row.col,
       candidates: row.candidates ? safeJsonParse(row.candidates, undefined) : undefined,
+      argCount: row.arg_count ?? undefined,
+      receiver: row.receiver ?? undefined,
+      argTypes: row.arg_types ?? undefined,
       filePath: row.file_path,
       language: row.language as Language,
     }));
@@ -1790,6 +1799,9 @@ export class QueryBuilder {
       line: row.line,
       column: row.col,
       candidates: row.candidates ? safeJsonParse(row.candidates, undefined) : undefined,
+      argCount: row.arg_count ?? undefined,
+      receiver: row.receiver ?? undefined,
+      argTypes: row.arg_types ?? undefined,
       filePath: row.file_path,
       language: row.language as Language,
     }));
@@ -1831,6 +1843,9 @@ export class QueryBuilder {
       line: row.line,
       column: row.col,
       candidates: row.candidates ? safeJsonParse(row.candidates, undefined) : undefined,
+      argCount: row.arg_count ?? undefined,
+      receiver: row.receiver ?? undefined,
+      argTypes: row.arg_types ?? undefined,
       filePath: row.file_path,
       language: row.language as Language,
     }));
@@ -1886,6 +1901,9 @@ export class QueryBuilder {
       line: row.line,
       column: row.col,
       candidates: row.candidates ? safeJsonParse(row.candidates, undefined) : undefined,
+      argCount: row.arg_count ?? undefined,
+      receiver: row.receiver ?? undefined,
+      argTypes: row.arg_types ?? undefined,
       filePath: row.file_path,
       language: row.language as Language,
     }));
