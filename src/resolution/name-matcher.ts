@@ -1762,6 +1762,853 @@ const JS_PROTOTYPE_BUILTINS = new Set([
 /** Languages whose extractors emit dot-prefixed chained-UI-attribute refs. */
 const ARKUI_ATTRIBUTE_LANGS = new Set(['arkts', 'cangjie']);
 
+/**
+ * Cangjie call resolution — receiver-aware and overload(arity)-aware.
+ *
+ * The extractor attaches `receiver` ('this' | 'super' | 'this.<field>' |
+ * simple identifier | '#expr' | absent for bare calls) and `argCount`
+ * (top-level argument count, trailing lambda = 1) to every call ref. This
+ * matcher REPLACES the generic strategies for Cangjie calls: the generic
+ * same-file preference bound `value.toString()` to whatever `toString` the
+ * host file declared, and first-by-position overload picking linked the
+ * wrong-arity overload. Confidence contract: 0.9 only when the type+arity
+ * filters leave exactly ONE candidate; anything chosen by proximity or
+ * uniqueness fallback stays at or below 0.5/0.7.
+ */
+
+/** Parse `(a: T, b!: U = v): R` → accepted call-site arity range. */
+export function cangjieParamRange(
+  signature: string | undefined
+): { min: number; max: number; types: string[] } | null {
+  if (!signature) return null;
+  const open = signature.indexOf('(');
+  if (open < 0) return null;
+  let depth = 0;
+  let close = -1;
+  for (let i = open; i < signature.length; i++) {
+    const ch = signature[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') {
+      depth--;
+      if (depth === 0) {
+        close = i;
+        break;
+      }
+    }
+  }
+  if (close < 0) return null;
+  const inner = signature.slice(open + 1, close).trim();
+  if (!inner) return { min: 0, max: 0, types: [] };
+  const params: string[] = [];
+  let cur = '';
+  let d = 0;
+  let angle = 0;
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i]!;
+    if (ch === '(' || ch === '[' || ch === '{') d++;
+    else if (ch === ')' || ch === ']' || ch === '}') d--;
+    else if (ch === '<') angle++;
+    else if (ch === '>' && inner[i - 1] !== '-') angle = Math.max(0, angle - 1);
+    if (ch === ',' && d === 0 && angle === 0) {
+      params.push(cur);
+      cur = '';
+      continue;
+    }
+    cur += ch;
+  }
+  params.push(cur);
+  let defaults = 0;
+  for (const param of params) {
+    // A top-level `=` marks a default value the call site may omit.
+    let pd = 0;
+    let pa = 0;
+    for (let i = 0; i < param.length; i++) {
+      const ch = param[i]!;
+      if (ch === '(' || ch === '[' || ch === '{') pd++;
+      else if (ch === ')' || ch === ']' || ch === '}') pd--;
+      else if (ch === '<') pa++;
+      else if (ch === '>' && param[i - 1] !== '-') pa = Math.max(0, pa - 1);
+      else if (ch === '=' && pd === 0 && pa === 0 && param[i + 1] !== '=' && param[i + 1] !== '>' && param[i - 1] !== '!' && param[i - 1] !== '=' && param[i - 1] !== '<' && param[i - 1] !== '>') {
+        defaults++;
+        break;
+      }
+    }
+  }
+  const types = params.map((param) => {
+    const colon = topLevelIndexOf(param, ':');
+    if (colon < 0) return '';
+    const eq = topLevelIndexOf(param, '=', colon + 1);
+    return param.slice(colon + 1, eq >= 0 ? eq : undefined).trim();
+  });
+  return { min: params.length - defaults, max: params.length, types };
+}
+
+/** Index of `ch` at bracket/angle depth 0, or -1. */
+function topLevelIndexOf(text: string, ch: string, from = 0): number {
+  let d = 0;
+  let angle = 0;
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]!;
+    if (c === '(' || c === '[' || c === '{') d++;
+    else if (c === ')' || c === ']' || c === '}') d--;
+    else if (c === '<') angle++;
+    else if (c === '>' && text[i - 1] !== '-') angle = Math.max(0, angle - 1);
+    else if (c === ch && d === 0 && angle === 0) {
+      if (ch === '=' && (text[i + 1] === '=' || text[i + 1] === '>' || text[i - 1] === '!' || text[i - 1] === '<' || text[i - 1] === '>' || text[i - 1] === '=')) continue;
+      return i;
+    }
+  }
+  return -1;
+}
+
+/** Can an argument with literal-shape `hint` bind a parameter of `paramType`? */
+function hintAccepts(hint: string, paramType: string): boolean {
+  if (hint === '?' || !paramType) return true;
+  const t = paramType.replace(/^\?+/, ''); // ?T option sugar
+  switch (hint) {
+    case 's':
+      return /^(?:String|CString|ToString)\b/.test(t) || /Option<\s*String/.test(t);
+    case 'r':
+      return /^Rune\b/.test(t) || /Option<\s*Rune/.test(t);
+    case 'i':
+      // integer literals adapt to any numeric type
+      return /^(?:U?Int(?:8|16|32|64|Native)?|Byte|Float(?:16|32|64))\b/.test(t);
+    case 'f':
+      return /^Float(?:16|32|64)\b/.test(t);
+    case 'b':
+      return /^Bool\b/.test(t) || /Option<\s*Bool/.test(t);
+    case 'a':
+      return /^(?:Array|ArrayList|VArray|Collection|List|Bytes|Iterable|Sequence|ReadOnlyCollection)\b/.test(t);
+    case 'l':
+      return t.includes('->');
+    case 'n':
+      return t.includes('Option') || paramType.startsWith('?');
+    default:
+      return true;
+  }
+}
+
+/** Declared return type text of a signature `(params): Ret`, or null. */
+function cangjieReturnType(signature: string | undefined): string | null {
+  if (!signature) return null;
+  const open = signature.indexOf('(');
+  if (open < 0) return null;
+  let depth = 0;
+  for (let i = open; i < signature.length; i++) {
+    const ch = signature[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') {
+      depth--;
+      if (depth === 0) {
+        const rest = signature.slice(i + 1).trim();
+        return rest.startsWith(':') ? rest.slice(1).trim() : null;
+      }
+    }
+  }
+  return null;
+}
+
+/** Collapse whitespace for type-text comparison. */
+function normType(t: string): string {
+  return t.replace(/\s+/g, '').replace(/^\?+/, '');
+}
+
+/**
+ * Compute the ARGUMENT EXPRESSION types of a Cangjie call site from source
+ * text + local declarations — invoked lazily, only when an overload family
+ * stays ambiguous after arity and literal-shape hints. Returns one type text
+ * (or null = unknown) per argument, or null when the call text is
+ * unparseable (named arguments, spans too many lines, …).
+ */
+export function cangjieArgExprTypes(
+  ref: UnresolvedRef,
+  context: ResolutionContext
+): (string | null)[] | null {
+  const lines = context.getFileLines
+    ? context.getFileLines(ref.filePath)
+    : (context.readFile(ref.filePath)?.split(/\r?\n/) ?? null);
+  if (!lines) return null;
+  const row = ref.line - 1;
+  if (row < 0 || row >= lines.length) return null;
+  // ref.column is the 0-based column of the call suffix start.
+  let text = lines[row]!.slice(ref.column);
+  for (let extra = 1; extra <= 5 && !balancedParens(text); extra++) {
+    if (row + extra >= lines.length) return null;
+    text += ' ' + lines[row + extra]!;
+  }
+  if (!text.startsWith('(')) return null;
+  let depth = 0;
+  let end = -1;
+  let inStr: string | null = null;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inStr) {
+      if (ch === '\\') i++;
+      else if (ch === inStr) inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") inStr = ch;
+    else if (ch === '(' || ch === '[' || ch === '{') depth++;
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  if (end < 0) return null;
+  const inner = text.slice(1, end).trim();
+  if (!inner) return [];
+  // split top-level commas, string-aware
+  const args: string[] = [];
+  let cur = '';
+  depth = 0;
+  inStr = null;
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i]!;
+    if (inStr) {
+      cur += ch;
+      if (ch === '\\') {
+        cur += inner[i + 1] ?? '';
+        i++;
+      } else if (ch === inStr) inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") inStr = ch;
+    else if (ch === '(' || ch === '[' || ch === '{' || ch === '<') depth++;
+    else if (ch === ')' || ch === ']' || ch === '}') depth--;
+    else if (ch === '>' && inner[i - 1] !== '-' && depth > 0) depth--;
+    if (ch === ',' && depth === 0) {
+      args.push(cur.trim());
+      cur = '';
+      continue;
+    }
+    cur += ch;
+  }
+  args.push(cur.trim());
+  if (args.some((a) => /^[A-Za-z_]\w*\s*:/.test(a))) return null; // named args
+  return args.map((a) => classifyCangjieArgExpr(a, ref, context));
+}
+
+/** True when the paren group opening at `open` closes exactly at the end of
+ * the expression — i.e. there is NO trailing member chain after the call. */
+function callClosesAtEnd(text: string, open: number): boolean {
+  if (open < 0) return false;
+  let depth = 0;
+  let inStr: string | null = null;
+  for (let i = open; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inStr) {
+      if (ch === '\\') i++;
+      else if (ch === inStr) inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") inStr = ch;
+    else if (ch === '(') depth++;
+    else if (ch === ')') {
+      depth--;
+      if (depth === 0) return i === text.length - 1;
+    }
+  }
+  return false;
+}
+
+function balancedParens(text: string): boolean {
+  let depth = 0;
+  let sawOpen = false;
+  let inStr: string | null = null;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inStr) {
+      if (ch === '\\') i++;
+      else if (ch === inStr) inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") inStr = ch;
+    else if (ch === '(') {
+      depth++;
+      sawOpen = true;
+    } else if (ch === ')') {
+      depth--;
+      if (sawOpen && depth === 0) return true;
+    }
+  }
+  return false;
+}
+
+function classifyCangjieArgExpr(
+  a: string,
+  ref: UnresolvedRef,
+  context: ResolutionContext
+): string | null {
+  if (!a) return null;
+  if (/^#*"/.test(a)) return 'String';
+  if (/^'/.test(a)) return 'Rune';
+  if (/^-?(?:0[xXbBoO][\da-fA-F_]+|[\d_]+)(?:[iu](?:8|16|32|64))?$/.test(a)) return '#int';
+  if (/^-?[\d_]+\.[\d_]+/.test(a)) return '#float';
+  if (a === 'true' || a === 'false') return 'Bool';
+  if (a === 'None') return '#none';
+  if (a.startsWith('[')) return '#array';
+  if (a.startsWith('{')) return '#lambda';
+  let m = a.match(/^this\.([A-Za-z_]\w*)$/);
+  if (m) return inferCangjieReceiverType(m[1]!, ref, context);
+  m = a.match(/^([A-Za-z_]\w*)$/);
+  if (m) return inferCangjieReceiverType(m[1]!, ref, context);
+  m = a.match(/^(?:this\.)?([A-Za-z_]\w*)\[([^\]]*)\]$/);
+  if (m) {
+    const container = inferCangjieReceiverType(m[1]!, ref, context);
+    if (!container) return null;
+    if (m[2]!.includes('..')) return container; // slice keeps the container type
+    const g = container.match(/^\w+<\s*(.+?)\s*>$/); // element access unwraps one layer
+    return g ? g[1]! : null;
+  }
+  m = a.match(/^(?:this\.)?([A-Za-z_]\w*)\.([A-Za-z_]\w*)\(/);
+  if (m && callClosesAtEnd(a, a.indexOf('(', m[1]!.length))) {
+    const recv = inferCangjieReceiverType(m[1]!, ref, context) ?? m[1]!;
+    const methods = cangjieMethodsOnType(simpleTypeName(recv), m[2]!, context);
+    if (methods.length >= 1) {
+      const rets = new Set(methods.map((n) => cangjieReturnType(n.signature) ?? ''));
+      if (rets.size === 1) {
+        const ret = [...rets][0]!;
+        return ret && ret !== 'Unit' ? ret : null;
+      }
+    }
+    return null;
+  }
+  m = a.match(/^([A-Za-z_]\w*)(?:<[^()]*>)?\(/);
+  if (m && callClosesAtEnd(a, a.indexOf('('))) {
+    // constructor (yields the type) or free-function call (declared return)
+    const named = context.getNodesByName(m[1]!).filter((n) => n.language === 'cangjie');
+    if (named.some((n) => n.kind === 'class' || n.kind === 'struct' || n.kind === 'enum')) {
+      return m[1]!;
+    }
+    const fns = named.filter((n) => n.kind === 'function');
+    if (fns.length >= 1) {
+      const rets = new Set(fns.map((n) => cangjieReturnType(n.signature) ?? ''));
+      if (rets.size === 1) {
+        const ret = [...rets][0]!;
+        return ret && ret !== 'Unit' ? ret : null;
+      }
+    }
+  }
+  return null;
+}
+
+/** Widely-used std conformances the graph has no extends edges for. */
+const CANGJIE_STD_SUPERTYPES: Record<string, string[]> = {
+  Array: ['Iterable', 'Collection', 'Sequence'],
+  ArrayList: ['Iterable', 'Collection', 'List', 'Sequence'],
+  VArray: ['Iterable', 'Collection'],
+  HashSet: ['Iterable', 'Collection', 'Set'],
+  LinkedList: ['Iterable', 'Collection'],
+  HashMap: ['Iterable', 'Collection', 'Map'],
+  String: ['ToString', 'Hashable', 'Comparable'],
+  File: ['InputStream', 'OutputStream', 'Resource', 'Seekable'],
+  ByteArrayStream: ['InputStream', 'OutputStream', 'Seekable'],
+  BufferedInputStream: ['InputStream'],
+};
+
+/** Does a computed argument type text bind a declared parameter type? */
+function exprTypeAccepts(
+  computed: string,
+  paramType: string,
+  context?: ResolutionContext
+): boolean {
+  if (!paramType) return true;
+  if (computed.startsWith('#')) {
+    const hint = { '#int': 'i', '#float': 'f', '#none': 'n', '#array': 'a', '#lambda': 'l' }[computed];
+    return hint ? hintAccepts(hint, paramType) : true;
+  }
+  const p = normType(paramType);
+  const c = normType(computed);
+  if (p === c) return true;
+  const pBase = p.split('<')[0]!;
+  const cBase = c.split('<')[0]!;
+  // generic-argument tolerance only when one side omits them
+  if (pBase === cBase && (!p.includes('<') || !c.includes('<'))) return true;
+  // Option<T> parameters accept T
+  const opt = p.match(/^Option<(.+)>$/);
+  if (opt && (normType(opt[1]!) === c || opt[1]!.split('<')[0] === cBase)) return true;
+  // std conformances (Array → Iterable, File → InputStream, …)
+  if (CANGJIE_STD_SUPERTYPES[cBase]?.includes(pBase)) return true;
+  // repo-declared conformances (extends/implements edges)
+  if (context && supertypeClosure(cBase, context).includes(pBase)) return true;
+  // Rejection policy by what we can KNOW about each side:
+  //   - a repo type ALIAS parameter (`type Pattern = Array<ByteMatch>`) is
+  //     opaque — never reject against it;
+  //   - two different CONCRETE nominal types (repo classes/structs/enums or
+  //     known std types) cannot bind — reject;
+  //   - an interface side relies on the conformance checks above (std table
+  //     + repo extends/implements closure) — reaching here means none held;
+  //   - anything else (unresolvable generics, unknown symbols) stays
+  //     permissive so the filter never rejects on ignorance.
+  const pKind = repoTypeKind(pBase, context);
+  if (pKind === 'alias') return true;
+  const cKind = repoTypeKind(cBase, context);
+  if (cKind === 'alias') return true;
+  const pConcrete = pKind === 'concrete' || KNOWN_TYPE_RE.test(pBase);
+  const cConcrete = cKind === 'concrete' || KNOWN_TYPE_RE.test(cBase);
+  if (pConcrete && cConcrete) return false;
+  if (pKind === 'interface' && cConcrete) return false;
+  return true;
+}
+
+/** What kind of type a simple name declares in the repo, if any. */
+function repoTypeKind(
+  base: string,
+  context?: ResolutionContext
+): 'concrete' | 'interface' | 'alias' | null {
+  if (!context) return null;
+  let kind: 'concrete' | 'interface' | 'alias' | null = null;
+  for (const n of context.getNodesByName(base)) {
+    if (n.language !== 'cangjie') continue;
+    if (n.kind === 'type_alias') return 'alias';
+    if (n.kind === 'class' || n.kind === 'struct' || n.kind === 'enum') kind = 'concrete';
+    else if (n.kind === 'interface' && kind === null) kind = 'interface';
+  }
+  return kind;
+}
+
+const KNOWN_TYPE_RE = new RegExp(
+  '^(?:' +
+    'U?Int(?:8|16|32|64|Native)?|Byte|Float(?:16|32|64)|Bool|Rune|String|CString|Unit|' +
+    'Array|ArrayList|VArray|Collection|List|Iterable|Sequence|Set|HashSet|HashMap|Map|LinkedList|Option|' +
+    'InputStream|OutputStream|File|ByteArrayStream|BufferedInputStream|Resource|Seekable' +
+  ')$'
+);
+
+/**
+ * Pick among same-name overloads: exactly one candidate → 0.9; several →
+ * literal-shape hints against declared parameter types; still ambiguous →
+ * NO edge (a first-by-position guess is the wrong-target class the
+ * evaluation measured — silence beats wrong).
+ */
+function resolveOverloads(
+  ref: UnresolvedRef,
+  pool: Node[],
+  context: ResolutionContext,
+  confidence = 0.9
+): ResolvedRef | null {
+  const picked = pickCangjieOverload(pool, ref.argCount, ref.argTypes, () =>
+    cangjieArgExprTypes(ref, context), context
+  );
+  if (!picked) return null;
+  return { original: ref, targetNodeId: picked.id, confidence, resolvedBy: 'instance-method' };
+}
+
+/**
+ * Shared overload picker: exactly one candidate wins outright; several are
+ * narrowed by arity then literal-shape hints; an ambiguous residue picks
+ * NOTHING. Exported for the constructor→init edge selection.
+ */
+export function pickCangjieOverload(
+  pool: Node[],
+  argCount: number | undefined,
+  argTypes: string | undefined,
+  exprTypes?: () => (string | null)[] | null,
+  context?: ResolutionContext
+): Node | null {
+  if (pool.length === 0) return null;
+  if (pool.length === 1) return pool[0]!;
+  let narrowed = pool;
+  if (argCount !== undefined) {
+    const byArity = narrowed.filter((n) => {
+      const range = cangjieParamRange(n.signature);
+      if (!range) return true;
+      return argCount >= range.min && argCount <= range.max;
+    });
+    if (byArity.length === 1) return byArity[0]!;
+    if (byArity.length > 1) narrowed = byArity;
+  }
+  if (argTypes && !argTypes.startsWith('!') && /[^?]/.test(argTypes)) {
+    const byHints = narrowed.filter((n) => {
+      const range = cangjieParamRange(n.signature);
+      if (!range) return true;
+      for (let k = 0; k < argTypes.length && k < range.types.length; k++) {
+        if (!hintAccepts(argTypes[k]!, range.types[k]!)) return false;
+      }
+      return true;
+    });
+    if (byHints.length === 1) return byHints[0]!;
+    if (byHints.length > 1) narrowed = byHints;
+  }
+  // Last resort for a still-ambiguous family: compute the argument
+  // EXPRESSION types from source + local declarations (lazy — this is the
+  // rare path) and demand per-position compatibility.
+  const computed = exprTypes?.();
+  if (computed && computed.some((t) => t !== null)) {
+    const byExpr = narrowed.filter((n) => {
+      const range = cangjieParamRange(n.signature);
+      if (!range) return true;
+      for (let k = 0; k < computed.length && k < range.types.length; k++) {
+        const c = computed[k] ?? null;
+        if (c !== null && !exprTypeAccepts(c, range.types[k]!, context)) return false;
+      }
+      return true;
+    });
+    if (byExpr.length === 1) return byExpr[0]!;
+  }
+  return null;
+}
+
+/** Keep only candidates whose declared parameter list accepts `argCount`. */
+function filterByArity(candidates: Node[], argCount: number | undefined): Node[] {
+  if (argCount === undefined) return candidates;
+  const kept = candidates.filter((n) => {
+    const range = cangjieParamRange(n.signature);
+    if (!range) return true; // unknown signature — never exclude on missing data
+    return argCount >= range.min && argCount <= range.max;
+  });
+  // An empty result means the gold target parses outside our model (or the
+  // call uses spread-like forms) — better to keep the unfiltered set for the
+  // structural gates than to drop everything on arity alone.
+  return kept.length > 0 ? kept : candidates;
+}
+
+/** The `Type` prefix of a method's qualifiedName, or null for free symbols. */
+function qualifiedPrefix(qn: string): string | null {
+  const sep = qn.lastIndexOf('::');
+  return sep > 0 ? qn.slice(0, sep) : null;
+}
+
+/** Last `::` segment — the simple type name getSupertypes indexes by. */
+function simpleTypeName(qn: string): string {
+  const sep = qn.lastIndexOf('::');
+  return sep >= 0 ? qn.slice(sep + 2) : qn;
+}
+
+/** Transitive supertype simple names of `typeName`, BFS, depth-capped. */
+function supertypeClosure(
+  typeName: string,
+  context: ResolutionContext,
+  maxDepth = 4
+): string[] {
+  if (!context.getSupertypes) return [];
+  const seen = new Set<string>([typeName]);
+  const out: string[] = [];
+  let frontier = [typeName];
+  for (let depth = 0; depth < maxDepth && frontier.length > 0; depth++) {
+    const next: string[] = [];
+    for (const t of frontier) {
+      for (const s of context.getSupertypes(t, 'cangjie')) {
+        if (!seen.has(s)) {
+          seen.add(s);
+          out.push(s);
+          next.push(s);
+        }
+      }
+    }
+    frontier = next;
+  }
+  return out;
+}
+
+/** Method nodes named `methodName` whose type prefix matches `typeName`. */
+function cangjieMethodsOnType(
+  typeName: string,
+  methodName: string,
+  context: ResolutionContext
+): Node[] {
+  if (context.getMethodMatches) {
+    return context.getMethodMatches(typeName, methodName, 'cangjie');
+  }
+  const want = `${typeName}::${methodName}`;
+  return context
+    .getNodesByName(methodName)
+    .filter(
+      (n) =>
+        n.kind === 'method' &&
+        n.language === 'cangjie' &&
+        (n.qualifiedName === want || n.qualifiedName.endsWith(`::${want}`))
+    );
+}
+
+const CANGJIE_TYPE_ANNOT = String.raw`([A-Za-z_][\w.]*)`;
+
+/**
+ * Local receiver-type inference for Cangjie: declarations scanned backward
+ * from the call line to the top of the file (locals and parameters bind
+ * nearest-first; class FIELDS may be declared anywhere in the file, so a
+ * whole-file forward sweep follows).
+ */
+function inferCangjieReceiverType(
+  receiverName: string,
+  ref: UnresolvedRef,
+  context: ResolutionContext
+): string | null {
+  const lines = context.getFileLines
+    ? context.getFileLines(ref.filePath)
+    : (context.readFile(ref.filePath)?.split(/\r?\n/) ?? null);
+  if (!lines || lines.length === 0) return null;
+  const r = receiverName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns = [
+    // `let x: Type` / `var x: Type` (annotated local or field)
+    new RegExp(String.raw`\b(?:let|var)\s+${r}\s*:\s*` + CANGJIE_TYPE_ANNOT),
+    // `let x = Type(...)` / `let x = Type<...>(...)` (constructed local)
+    new RegExp(String.raw`\b(?:let|var)\s+${r}\s*=\s*([A-Z]\w*)\s*[(<]`),
+    // parameter `x: Type` / named parameter `x!: Type`
+    new RegExp(String.raw`[(,]\s*${r}\s*!?\s*:\s*` + CANGJIE_TYPE_ANNOT),
+  ];
+  const matchLine = (i: number): string | null => {
+    const line = lines[i];
+    if (!line || line.length > 10_000) return null;
+    for (const re of patterns) {
+      const m = line.match(re);
+      if (m && m[1]) {
+        const t = m[1].split('.').pop()!;
+        if (/^[A-Za-z_]\w*$/.test(t) && t !== 'Unit') return t;
+      }
+    }
+    return null;
+  };
+  const callIdx = Math.max(0, Math.min(lines.length - 1, ref.line - 1));
+  for (let i = callIdx; i >= 0; i--) {
+    const t = matchLine(i);
+    if (t) return t;
+  }
+  for (let i = callIdx + 1; i < lines.length; i++) {
+    const t = matchLine(i);
+    if (t) return t;
+  }
+  return null;
+}
+
+/** Proximity fallback with the ≤0.5 cap the arity/type filters didn't earn. */
+function proximityCapped(
+  ref: UnresolvedRef,
+  pool: Node[],
+  context: ResolutionContext,
+  resolvedBy: ResolvedRef['resolvedBy'] = 'exact-match'
+): ResolvedRef | null {
+  if (pool.length === 0) return null;
+  const best = findBestMatch(ref, pool, context);
+  if (!best) return null;
+  return { original: ref, targetNodeId: best.id, confidence: 0.5, resolvedBy };
+}
+
+/** Method candidates scoped to a type and (optionally) its supertypes. */
+function methodsInTypeScope(
+  typeName: string,
+  methodName: string,
+  context: ResolutionContext,
+  includeSupertypes: boolean
+): Node[] {
+  const own = cangjieMethodsOnType(simpleTypeName(typeName), methodName, context);
+  if (own.length > 0 || !includeSupertypes) return own;
+  for (const supertype of supertypeClosure(simpleTypeName(typeName), context)) {
+    const inherited = cangjieMethodsOnType(supertype, methodName, context);
+    if (inherited.length > 0) return inherited;
+  }
+  return [];
+}
+
+export function matchCangjieCall(
+  ref: UnresolvedRef,
+  context: ResolutionContext
+): ResolvedRef | null {
+  const name = ref.referenceName;
+  const fromNode = context.getNodeById?.(ref.fromNodeId) ?? null;
+  const enclosingType = fromNode ? qualifiedPrefix(fromNode.qualifiedName) : null;
+  const receiver = ref.receiver;
+
+  // ---- super.method() — never the enclosing type itself ------------------
+  if (receiver === 'super') {
+    if (!enclosingType) return null;
+    for (const supertype of supertypeClosure(simpleTypeName(enclosingType), context)) {
+      const pool = filterByArity(cangjieMethodsOnType(supertype, name, context), ref.argCount);
+      if (pool.length > 0) {
+        return resolveOverloads(ref, pool, context);
+      }
+    }
+    // Supertype unknown (external) or edges not built yet: NEVER fall back —
+    // a same-file/self match here is a fake recursion edge.
+    return null;
+  }
+
+  // ---- this.field.method() — the field's declared type -------------------
+  if (receiver && receiver.startsWith('this.')) {
+    const fieldName = receiver.slice(5);
+    const fieldType = inferCangjieReceiverType(fieldName, ref, context);
+    if (fieldType) {
+      const pool = filterByArity(
+        methodsInTypeScope(fieldType, name, context, true),
+        ref.argCount
+      );
+      const hit = resolveOverloads(ref, pool, context);
+      if (hit) return hit;
+    }
+    return cangjieUntypedReceiverFallback(ref, context);
+  }
+
+  // ---- this.method() / bare call --------------------------------------------
+  if (receiver === 'this' || receiver === undefined) {
+    if (enclosingType) {
+      const pool = filterByArity(
+        methodsInTypeScope(enclosingType, name, context, true),
+        ref.argCount
+      );
+      const hit = resolveOverloads(ref, pool, context);
+      if (hit) return hit;
+    }
+    if (receiver === 'this') {
+      // An explicit-this method that isn't on the enclosing type or a known
+      // supertype: the supertype may be external or the extends edges not
+      // built yet (first pass) — resolving it to some other class is exactly
+      // the receiver-blindness class. Drop.
+      return null;
+    }
+    return cangjieBareSymbolMatch(ref, context);
+  }
+
+  // ---- named receiver ------------------------------------------------------
+  if (receiver && !receiver.startsWith('#')) {
+    // Static call on a type name (`Md5.hash(x)`, `HorizontalPath.of(...)`).
+    const typeNodes = context
+      .getNodesByName(receiver)
+      .filter(
+        (n) =>
+          n.language === 'cangjie' &&
+          (n.kind === 'class' || n.kind === 'struct' || n.kind === 'enum' || n.kind === 'interface')
+      );
+    if (typeNodes.length > 0) {
+      const pool = filterByArity(
+        methodsInTypeScope(receiver, name, context, true),
+        ref.argCount
+      );
+      const hit = resolveOverloads(ref, pool, context);
+      if (hit) return hit;
+      // Enum constructor-ish (`Color.Red(x)`) or companion patterns can miss;
+      // fall through to inference below (a local may shadow the type name).
+    }
+    const inferred = inferCangjieReceiverType(receiver, ref, context);
+    if (inferred) {
+      const pool = filterByArity(
+        methodsInTypeScope(inferred, name, context, true),
+        ref.argCount
+      );
+      const hit = resolveOverloads(ref, pool, context);
+      if (hit) return hit;
+    }
+    return cangjieUntypedReceiverFallback(ref, context);
+  }
+
+  // ---- immediate-call receivers --------------------------------------------
+  if (receiver && receiver.startsWith('#new:')) {
+    // `Type(args).method()` — the receiver IS the constructed type.
+    const typeName = receiver.slice(5);
+    const pool = filterByArity(methodsInTypeScope(typeName, name, context, true), ref.argCount);
+    return resolveOverloads(ref, pool, context) ?? cangjieUntypedReceiverFallback(ref, context);
+  }
+  if (receiver && receiver.startsWith('#call:')) {
+    // `helper(args).method()` — type the receiver by the callee's declared
+    // return type (validated: the method must exist on it).
+    const calleeName = receiver.slice(6);
+    const callables = context
+      .getNodesByName(calleeName)
+      .filter((n) => n.language === 'cangjie' && (n.kind === 'function' || n.kind === 'method'));
+    const rets = new Set(
+      callables.map((n) => cangjieReturnType(n.signature)).filter((t): t is string => !!t && t !== 'Unit')
+    );
+    if (rets.size === 1) {
+      const retBase = [...rets][0]!.split('<')[0]!.trim();
+      const pool = filterByArity(methodsInTypeScope(retBase, name, context, true), ref.argCount);
+      const hit = resolveOverloads(ref, pool, context);
+      if (hit) return hit;
+    }
+    return cangjieUntypedReceiverFallback(ref, context);
+  }
+
+  // ---- computed receiver (#expr) -------------------------------------------
+  return cangjieUntypedReceiverFallback(ref, context);
+}
+
+/**
+ * Receiver type unknown: no same-file preference (that is the wrong-target
+ * factory this matcher exists to kill). A repo-wide unique method (after
+ * arity) still resolves at moderate confidence; a name owned by exactly one
+ * TYPE (several overloads, one class) resolves by arity within it; anything
+ * else stays unlinked.
+ */
+function cangjieUntypedReceiverFallback(
+  ref: UnresolvedRef,
+  context: ResolutionContext
+): ResolvedRef | null {
+  const methods = context
+    .getNodesByName(ref.referenceName)
+    .filter((n) => n.kind === 'method' && n.language === 'cangjie');
+  if (methods.length === 0) return null;
+  const byArity = filterByArity(methods, ref.argCount);
+  if (byArity.length === 1) {
+    return { original: ref, targetNodeId: byArity[0]!.id, confidence: 0.7, resolvedBy: 'instance-method' };
+  }
+  const owners = new Set(byArity.map((n) => qualifiedPrefix(n.qualifiedName) ?? ''));
+  if (owners.size === 1) {
+    // One type owns every candidate — the receiver's type is ambiguous but the
+    // TARGET type isn't; literal-shape hints pick among its overloads, and an
+    // ambiguous residue resolves at low confidence rather than not at all
+    // (single-owner overload families are same-behavior variants).
+    return resolveOverloads(ref, byArity, context, 0.7);
+  }
+  return null;
+}
+
+/**
+ * Bare call outside any method-candidate context: free functions, then type
+ * constructors (`Md5(true)` → the class node; edge creation promotes it to
+ * `instantiates` and adds the calls→init edge), then enum members.
+ */
+function cangjieBareSymbolMatch(
+  ref: UnresolvedRef,
+  context: ResolutionContext
+): ResolvedRef | null {
+  const all = context
+    .getNodesByName(ref.referenceName)
+    .filter((n) => n.language === 'cangjie');
+
+  const functions = filterByArity(all.filter((n) => n.kind === 'function'), ref.argCount);
+  if (functions.length === 1) {
+    return { original: ref, targetNodeId: functions[0]!.id, confidence: 0.9, resolvedBy: 'exact-match' };
+  }
+  if (functions.length > 1) {
+    const files = new Set(functions.map((n) => n.filePath));
+    if (files.size === 1) {
+      // A same-file free-function OVERLOAD family: the full overload picker
+      // (arity → literal hints → argument-expression types incl. std
+      // conformances) decides, and an ambiguous residue stays UNLINKED —
+      // never proximity, which is order-of-declaration guessing.
+      return resolveOverloads(ref, functions, context);
+    }
+    const local = preferCallSiteFile(functions, ref.filePath);
+    if (local.length === 1) {
+      return { original: ref, targetNodeId: local[0]!.id, confidence: 0.85, resolvedBy: 'exact-match' };
+    }
+    return proximityCapped(ref, functions, context);
+  }
+
+  const types = all.filter(
+    (n) => n.kind === 'class' || n.kind === 'struct' || n.kind === 'enum'
+  );
+  if (types.length >= 1) {
+    const local = types.length > 1 ? preferCallSiteFile(types, ref.filePath) : types;
+    if (local.length === 1) {
+      return { original: ref, targetNodeId: local[0]!.id, confidence: 0.9, resolvedBy: 'exact-match' };
+    }
+    return proximityCapped(ref, types, context);
+  }
+
+  const enumMembers = all.filter((n) => n.kind === 'enum_member');
+  if (enumMembers.length >= 1) {
+    const local = enumMembers.length > 1 ? preferCallSiteFile(enumMembers, ref.filePath) : enumMembers;
+    if (local.length === 1) {
+      return { original: ref, targetNodeId: local[0]!.id, confidence: 0.85, resolvedBy: 'exact-match' };
+    }
+    return proximityCapped(ref, enumMembers, context);
+  }
+
+  return null;
+}
+
 export function matchReference(
   ref: UnresolvedRef,
   context: ResolutionContext
@@ -1826,6 +2673,19 @@ export function matchReference(
       confidence: 0.85,
       resolvedBy: 'exact-match',
     };
+  }
+
+  // Cangjie calls: receiver-aware and arity-aware, and TERMINAL — the
+  // generic fallthrough (same-file preference in findBestMatch, fuzzy) is
+  // exactly what produced the wrong-overload and receiver-blind edges the
+  // evaluation surfaced. Attribute chains (leading dot) keep their
+  // decorator-gated path above; non-call refs keep the normal strategies.
+  if (
+    ref.language === 'cangjie' &&
+    ref.referenceKind === 'calls' &&
+    !ref.referenceName.startsWith('.')
+  ) {
+    return matchCangjieCall(ref, context);
   }
 
   // Erlang `-behaviour(m)` refs target a MODULE. Letting them fall through to

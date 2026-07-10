@@ -16,7 +16,7 @@ import {
   FrameworkResolver,
   ImportMapping,
 } from './types';
-import { matchReference, matchFunctionRef, matchDottedCallChain, matchScopedCallChain, sameLanguageFamily, crossesKnownFamily } from './name-matcher';
+import { matchReference, matchFunctionRef, matchDottedCallChain, matchScopedCallChain, matchCangjieCall, pickCangjieOverload, cangjieArgExprTypes, sameLanguageFamily, crossesKnownFamily } from './name-matcher';
 import { resolveViaImport, resolveJvmImport, extractImportMappings, extractReExports, loadCppIncludeDirs, isPhpIncludePathRef, isCobolCopybookRef, isNixPathImportRef } from './import-resolver';
 import { detectFrameworks } from './frameworks';
 import { synthesizeCallbackEdges } from './callback-synthesizer';
@@ -578,6 +578,9 @@ export class ReferenceResolver {
       column: ref.column,
       filePath: ref.filePath || this.getFilePathFromNodeId(ref.fromNodeId),
       language: ref.language || this.getLanguageFromNodeId(ref.fromNodeId),
+      argCount: ref.argCount,
+      receiver: ref.receiver,
+      argTypes: ref.argTypes,
     }));
 
     const total = refs.length;
@@ -898,8 +901,11 @@ export class ReferenceResolver {
       // resolvable once implements/extends edges exist (the conformance pass).
       if (
         ref.referenceKind === 'calls' &&
-        CHAIN_LANGUAGES.has(ref.language) &&
-        CHAIN_SHAPE.test(ref.referenceName)
+        ((CHAIN_LANGUAGES.has(ref.language) && CHAIN_SHAPE.test(ref.referenceName)) ||
+          // Cangjie method calls gated on receiver type: the supertype walk
+          // (super., inherited methods) needs the extends/implements edges,
+          // which don't exist in the first pass.
+          (ref.language === 'cangjie' && !ref.referenceName.startsWith('.')))
       ) {
         this.deferredChainRefs.push(ref);
       }
@@ -916,7 +922,8 @@ export class ReferenceResolver {
    * Create edges from resolved references
    */
   createEdges(resolved: ResolvedRef[]): Edge[] {
-    return resolved.map((ref) => {
+    const edges: Edge[] = [];
+    for (const ref of resolved) {
       // `function_ref` (#756) is internal-only: it persists as a `references`
       // edge (the registration site depends on the callback), distinguishable
       // by metadata.resolvedBy === 'function-ref'. callers/impact already
@@ -945,10 +952,32 @@ export class ReferenceResolver {
         const targetNode = this.queries.getNodeById(ref.targetNodeId);
         if (targetNode && (targetNode.kind === 'class' || targetNode.kind === 'struct')) {
           kind = 'instantiates';
+          // Cangjie: `Md5(true)` is BOTH an instantiation of the class and a
+          // call of its `init` — the class-level edge alone left every
+          // constructor call site without a callable target. Keep the
+          // instantiates edge and add calls→init when the class declares one
+          // (arity picks among init overloads).
+          if (ref.original.language === 'cangjie') {
+            const init = this.findCangjieInit(targetNode, ref.original);
+            if (init) {
+              edges.push({
+                source: ref.original.fromNodeId,
+                target: init.id,
+                kind: 'calls',
+                line: ref.original.line,
+                column: ref.original.column,
+                metadata: {
+                  confidence: ref.confidence,
+                  resolvedBy: 'instance-method',
+                  ctorInit: true,
+                },
+              });
+            }
+          }
         }
       }
 
-      return {
+      edges.push({
         source: ref.original.fromNodeId,
         target: ref.targetNodeId,
         kind,
@@ -963,8 +992,37 @@ export class ReferenceResolver {
           // exactly the edges this feature added.
           ...(ref.original.referenceKind === 'function_ref' ? { fnRef: true } : {}),
         },
-      };
-    });
+      });
+    }
+    return edges;
+  }
+
+  /**
+   * The `init` method of a Cangjie class/struct node, arity-matched when the
+   * class overloads its constructors. Same-file candidates only — an init
+   * belongs to its type's body (extend blocks cannot add constructors).
+   */
+  private findCangjieInit(classNode: Node, ref: UnresolvedRef): Node | null {
+    const inits = this.queries
+      .getNodesByName('init')
+      .filter(
+        (n) =>
+          n.kind === 'method' &&
+          n.language === 'cangjie' &&
+          n.filePath === classNode.filePath &&
+          (n.qualifiedName === `${classNode.qualifiedName}::init` ||
+            n.qualifiedName.endsWith(`::${classNode.name}::init`) ||
+            n.qualifiedName === `${classNode.name}::init`)
+      );
+    if (inits.length === 0) return null;
+    if (inits.length === 1) return inits[0]!;
+    // Several init overloads: arity, then literal-shape hints; a residue that
+    // stays ambiguous gets NO init edge (the instantiates edge remains) —
+    // a fixed first-by-position pick is exactly the wrong-target class the
+    // evaluation measured.
+    return pickCangjieOverload(inits, ref.argCount, ref.argTypes, () =>
+      cangjieArgExprTypes(ref, this.context)
+    );
   }
 
   /**
@@ -1055,9 +1113,11 @@ export class ReferenceResolver {
     for (const ref of deferred) {
       // `::`-receiver languages (Rust) split on `::` (matchScopedCallChain);
       // dotted-receiver languages on `.` (matchDottedCallChain).
-      const chainMatch = SCOPED_CHAIN_LANGUAGES.has(ref.language)
-        ? matchScopedCallChain(ref, this.context)
-        : matchDottedCallChain(ref, this.context);
+      const chainMatch = ref.language === 'cangjie'
+        ? matchCangjieCall(ref, this.context)
+        : SCOPED_CHAIN_LANGUAGES.has(ref.language)
+          ? matchScopedCallChain(ref, this.context)
+          : matchDottedCallChain(ref, this.context);
       const match = this.gateLanguage(chainMatch, ref);
       if (match) resolved.push(match);
       await maybeYield();
@@ -1104,6 +1164,9 @@ export class ReferenceResolver {
         column: raw.column,
         filePath: raw.filePath || this.getFilePathFromNodeId(raw.fromNodeId),
         language: raw.language || this.getLanguageFromNodeId(raw.fromNodeId),
+        argCount: raw.argCount,
+        receiver: raw.receiver,
+        argTypes: raw.argTypes,
       };
       const result = this.resolveOne(ref);
       if (result) {

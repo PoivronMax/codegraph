@@ -354,3 +354,117 @@ describe('Cross-language fuzzy gate', () => {
     expect(fromCpp).toHaveLength(0);
   });
 });
+
+describe('Cangjie call-edge accuracy (overloads, receivers, constructors)', () => {
+  let tmpDir: string | undefined;
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = undefined;
+  });
+
+  async function buildGraph(files: Record<string, string>) {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-cjacc-'));
+    for (const [name, content] of Object.entries(files)) {
+      fs.writeFileSync(path.join(tmpDir, name), content);
+    }
+    const cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+    return cg;
+  }
+
+  function callTargets(cg: any, callerName: string): string[] {
+    const caller = [...cg.getNodesByKind('method'), ...cg.getNodesByKind('function')]
+      .find((n: any) => n.name === callerName);
+    if (!caller) return [];
+    return cg
+      .getOutgoingEdges(caller.id)
+      .filter((e: any) => e.kind === 'calls')
+      .map((e: any) => {
+        const t = cg.getNode(e.target);
+        return `${t?.qualifiedName}@${t?.startLine}`;
+      });
+  }
+
+  it('links each call to the arity-matching overload', async () => {
+    const cg = await buildGraph({
+      'uuid.cj':
+        'package demo\n\npublic class Uuid {\n' +
+        '    public func toByteArray(arr: Array<UInt8>): Unit {}\n' +
+        '    public func toByteArray(arr: Array<UInt8>, off: Int64): Unit {}\n' +
+        '}\n',
+      'caller.cj':
+        'package demo\n\nfunc run(u: Uuid, result: Array<UInt8>): Unit {\n' +
+        '    u.toByteArray(result)\n' +
+        '    u.toByteArray(result, 0)\n' +
+        '}\n',
+    });
+    const targets = callTargets(cg, 'run');
+    expect(targets).toContain('Uuid::toByteArray@4');
+    expect(targets).toContain('Uuid::toByteArray@5');
+  });
+
+  it('resolves methods on the RECEIVER type, never the host file', async () => {
+    const cg = await buildGraph({
+      'value.cj':
+        'package demo\n\npublic class IniValue {\n    public func toString(): String { "v" }\n}\n',
+      'parser.cj':
+        'package demo\n\npublic class IniParser {\n' +
+        '    public func toString(): String { "p" }\n' +
+        '    public func handle(value: IniValue): String {\n' +
+        '        return value.toString()\n' +
+        '    }\n' +
+        '}\n',
+    });
+    const targets = callTargets(cg, 'handle');
+    expect(targets.some((t) => t.startsWith('IniValue::toString'))).toBe(true);
+    expect(targets.some((t) => t.startsWith('IniParser::toString'))).toBe(false);
+  });
+
+  it('never binds super.m() back to the overriding method itself', async () => {
+    const cg = await buildGraph({
+      'emit.cj':
+        'package demo\n\nopen class Base {\n    public open func toString(): String { "b" }\n}\n\n' +
+        'public class Emit <: Base {\n' +
+        '    public func toString(): String {\n        return super.toString()\n    }\n}\n',
+    });
+    const emitToString = cg
+      .getNodesByKind('method')
+      .find((n: any) => n.qualifiedName === 'Emit::toString');
+    const calls = cg
+      .getOutgoingEdges(emitToString!.id)
+      .filter((e: any) => e.kind === 'calls');
+    for (const e of calls) expect(e.target).not.toBe(emitToString!.id);
+    const targets = calls.map((e: any) => cg.getNode(e.target)?.qualifiedName);
+    expect(targets).toContain('Base::toString');
+  });
+
+  it('emits BOTH instantiates and calls→init for constructor calls', async () => {
+    const cg = await buildGraph({
+      'md5.cj':
+        'package demo\n\npublic class Md5 {\n    public init(upper!: Bool = false) {}\n}\n',
+      'test.cj':
+        'package demo\n\nfunc t(): Unit {\n    let md5 = Md5(true)\n}\n',
+    });
+    const t = cg.getNodesByKind('function').find((n: any) => n.name === 't');
+    const out = cg.getOutgoingEdges(t!.id);
+    const kinds = out.map((e: any) => `${e.kind}:${cg.getNode(e.target)?.qualifiedName}`);
+    expect(kinds).toContain('instantiates:Md5');
+    expect(kinds).toContain('calls:Md5::init');
+  });
+
+  it('picks free-function overloads by argument-type conformance, drops true ambiguity', async () => {
+    const cg = await buildGraph({
+      'is_webp.cj':
+        'package demo\n\npublic func isWebp(inputStream: InputStream): Bool { true }\n' +
+        'public func isWebp(iter: Iterable<Byte>): Bool { true }\n',
+      'test.cj':
+        'package demo\n\nfunc t(): Unit {\n' +
+        '    let bytes: Array<Byte> = load()\n' +
+        '    isWebp(bytes)\n' +
+        '}\n',
+    });
+    const targets = callTargets(cg, 't');
+    const isWebpTargets = targets.filter((x) => x.startsWith('isWebp'));
+    expect(isWebpTargets).toEqual(['isWebp@4']); // the Iterable overload only
+  });
+});
