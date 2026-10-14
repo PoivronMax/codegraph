@@ -11820,8 +11820,9 @@ export function matchDottedCallChain(
 
   if (lastDot <= 0) {
     // Go: bare package-level factory FUNCTION `New().method()` — the receiver's
-    // type is what `New` returns; resolve the method on that.
-    if (ref.language === 'go') {
+    // type is what `New` returns; resolve the method on that. Cangjie's
+    // singleton accessors read the same way: `getAuthService().sendCode(…)`.
+    if (ref.language === 'go' || (ref.language === 'cangjie' && /^[a-z_]/.test(inner))) {
       const ret = lookupCalleeReturnType(inner, ref, context);
       if (ret) {
         return resolveMethodOnType(ret, method, ref, context, 0.85, 'instance-method', importedFqnOf(ret, ref, context));
@@ -12754,6 +12755,34 @@ function enclosingScopeStartLine(ref: UnresolvedRef, context: ResolutionContext)
 }
 
 /**
+ * The type of a Cangjie local bound from a call to a top-level function —
+ * `let svc = getRealAuthService()` — read off that function's declared return
+ * type. Scanned backwards from the call within its enclosing scope; null when
+ * the function is unknown, returns nothing nameable, or same-named functions
+ * disagree.
+ */
+function cangjieFactoryLocalType(receiver: string, ref: UnresolvedRef, context: ResolutionContext): string | null {
+  if (!/^[A-Za-z_]\w*$/.test(receiver)) return null;
+  const lines = context.getFileLines
+    ? context.getFileLines(ref.filePath)
+    : (context.readFile(ref.filePath)?.split(/\r?\n/) ?? null);
+  if (!lines) return null;
+  const re = new RegExp(`\\b(?:let|var)\\s+${receiver}\\s*=\\s*([a-z_]\\w*)\\s*\\(`);
+  const start = Math.max(0, enclosingScopeStartLine(ref, context) - 1);
+  for (let i = Math.min(lines.length, ref.line) - 1; i >= start; i--) {
+    const m = lines[i]?.match(re);
+    if (!m) continue;
+    const returns = new Set(
+      context.getNodesByName(m[1]!)
+        .filter((n) => n.language === 'cangjie' && n.kind === 'function' && n.returnType)
+        .map((n) => n.returnType!),
+    );
+    return returns.size === 1 ? [...returns][0]! : null;
+  }
+  return null;
+}
+
+/**
  * Infer a receiver's type from its local declaration/initializer in the
  * enclosing function body. Language-dispatched; returns null for languages
  * without patterns or when no declaration is found. Bounded to the enclosing
@@ -13329,6 +13358,9 @@ export function matchMethodCall(
     // A pytest test's parameter is what its fixture returns: flaskbb's
     // `cli_runner.invoke(…)` is click's `CliRunner`, not the project's one `invoke`.
     if (!inferredType && ref.language === 'python' && dotMatch) inferredType = pythonFixtureReturnType(objectOrClass!, ref, context);
+    // A Cangjie local bound from a factory call (`let svc = getAuthService()`)
+    // has the type that function declares it returns.
+    if (!inferredType && ref.language === 'cangjie' && dotMatch) inferredType = cangjieFactoryLocalType(objectOrClass!, ref, context);
     // A Go parameter named like an import is declared through a package as
     // often as not (`logger logger.Interface`), which the patterns above
     // don't read; the scope reader kept its type. Not a field's: in
@@ -16023,14 +16055,16 @@ function matchReferenceInner(
   // same-named properties thousands of false callers. Ambiguity rule matches
   // the rest of the file: several same-named helpers → prefer the call-site
   // file, still ambiguous → drop the ref rather than guess.
-  if (ref.language === 'arkts' && ref.referenceName.startsWith('.')) {
+  // Cangjie's ArkUI view code chains attributes the same way (`Text("x")
+  // .fontSize(16)`); its `@Builder` helpers may also be component members.
+  if ((ref.language === 'arkts' || ref.language === 'cangjie') && ref.referenceName.startsWith('.')) {
     const base = ref.referenceName.slice(1);
     const candidates = context
       .getNodesByName(base)
       .filter(
         (n) =>
-          n.language === 'arkts' &&
-          n.kind === 'function' &&
+          n.language === ref.language &&
+          (n.kind === 'function' || (ref.language === 'cangjie' && n.kind === 'method')) &&
           (n.decorators ?? []).some((d) => ARKUI_ATTRIBUTE_DECORATORS.has(d))
       );
     const chosen =

@@ -103,4 +103,173 @@ describe('Cangjie package/import resolution', () => {
     expect(add).toBeDefined();
     expect(cg.getIncomingEdges(add!.id).filter((e) => e.kind === 'calls')).toHaveLength(0);
   });
+
+  it('gates UI attributes to builder helpers and bridges @State writes to build()', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-cangjie-'));
+    // A decoy: a method that merely shares a framework attribute's name.
+    write('src/model/sizes.cj',
+      'package demo.model\n\n' +
+      'public class Sizes {\n' +
+      '    public func width(w: Int64): Int64 { w }\n' +
+      '}\n');
+    write('src/ui/page.cj',
+      'package demo.ui\n\n' +
+      '@Component\n' +
+      'public class CounterPage {\n' +
+      '    @State var count: Int64 = 0\n\n' +
+      '    @Builder func titleStyle(): Unit {}\n\n' +
+      '    func inc(): Unit {\n' +
+      '        count += 1\n' +
+      '    }\n\n' +
+      '    func readOnly(): Int64 {\n' +
+      '        count\n' +
+      '    }\n\n' +
+      '    func build() {\n' +
+      '        Column {\n' +
+      '            Text("n").width(100).titleStyle()\n' +
+      '            Button("+").onClick({ _ => this.inc() })\n' +
+      '        }\n' +
+      '    }\n' +
+      '}\n');
+
+    cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+
+    const methods = cg.getNodesByKind('method');
+    const m = (qn: string) => methods.find((n) => n.qualifiedName === qn)!;
+    const build = m('demo.ui::CounterPage::build');
+    const width = m('demo.model::Sizes::width');
+    const titleStyle = m('demo.ui::CounterPage::titleStyle');
+    expect(cg.getIncomingEdges(width.id).filter((e) => e.kind === 'calls')).toHaveLength(0);
+    expect(cg.getOutgoingEdges(build.id).map((e) => e.target)).toContain(titleStyle.id);
+
+    // inc writes @State count → re-renders build(); readOnly only reads it.
+    const toBuild = cg.getIncomingEdges(build.id).filter((e) => e.kind === 'calls').map((e) => e.source);
+    expect(toBuild).toContain(m('demo.ui::CounterPage::inc').id);
+    expect(toBuild).not.toContain(m('demo.ui::CounterPage::readOnly').id);
+  });
+
+  it('dispatches through an extend in another file, and never lands a type reference on it', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-cangjie-'));
+    write('src/geo/point.cj',
+      'package demo.geo\n\n' +
+      'public interface Printable {\n' +
+      '    func show(): String\n' +
+      '}\n\n' +
+      'public struct Point {\n' +
+      '    public init(x: Int64, y: Int64) {}\n' +
+      '}\n');
+    write('src/geo/point_ext.cj',
+      'package demo.geo\n\n' +
+      'extend Point <: Printable {\n' +
+      '    public func show(): String { "p" }\n' +
+      '}\n\n' +
+      'extend Int64 <: Printable {\n' +
+      '    public func show(): String { "i" }\n' +
+      '}\n');
+    write('src/app/main.cj',
+      'package demo.app\n\n' +
+      'import demo.geo.*\n\n' +
+      'public func render(p: Printable): String {\n' +
+      '    p.show()\n' +
+      '}\n\n' +
+      'public func make(): Int64 {\n' +
+      '    let p = Point(1, 2)\n' +
+      '    Int64(3)\n' +
+      '}\n');
+
+    cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+
+    const ext = cg.getNodesByKind('class').filter((n) => (n.decorators ?? []).includes('extend'));
+    expect(ext.map((n) => n.name).sort()).toEqual(['Int64', 'Point']);
+    const point = cg.getNodesByKind('struct').find((n) => n.name === 'Point')!;
+    const make = cg.getNodesByKind('function').find((n) => n.name === 'make')!;
+    const made = cg.getOutgoingEdges(make.id).filter((e) => e.kind === 'instantiates' || e.kind === 'calls');
+    expect(made.map((e) => e.target)).toContain(point.id);
+    for (const e of ext) expect(made.map((x) => x.target)).not.toContain(e.id);
+
+    // Both extensions implement Printable, so its `show` reaches theirs.
+    const ifaceShow = cg.getNodesByKind('method').find((n) => n.qualifiedName === 'demo.geo::Printable::show')!;
+    const impls = cg.getOutgoingEdges(ifaceShow.id).map((e) => cg!.getNode(e.target)?.qualifiedName);
+    expect(impls).toEqual(expect.arrayContaining(['demo.geo::Point::show', 'demo.geo::Int64::show']));
+  });
+
+  it('never binds a UI component call to a same-named enum case of an unrelated file', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-cangjie-'));
+    write('src/svc/kinds.cj',
+      'package demo.svc\n\n' +
+      'public enum HeaderKind {\n' +
+      '    | Text | Media\n' +
+      '}\n');
+    write('src/ui/page.cj',
+      'package demo.ui\n\n' +
+      'import demo.svc.*\n\n' +
+      '@Component\n' +
+      'public class Page {\n' +
+      '    func build() {\n' +
+      '        Text("hello")\n' +
+      '    }\n' +
+      '}\n');
+    write('src/svc/use.cj',
+      'package demo.svc\n\n' +
+      'public func pick(): HeaderKind {\n' +
+      '    Text\n' +
+      '}\n\n' +
+      'public func make(): HeaderKind {\n' +
+      '    Media()\n' +
+      '}\n');
+
+    cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+
+    const members = cg.getNodesByKind('enum_member');
+    const media = members.find((n) => n.name === 'Media')!;
+    const text = members.find((n) => n.name === 'Text')!;
+    const build = cg.getNodesByKind('method').find((n) => n.name === 'build')!;
+    expect(cg.getOutgoingEdges(build.id).map((e) => e.target)).not.toContain(text.id);
+    // A file that names the enum still reaches its cases.
+    expect(cg.getIncomingEdges(media.id).filter((e) => e.kind !== 'contains').length).toBeGreaterThan(0);
+  });
+
+  it('types a local or chain bound from a factory function by its declared return type', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-cangjie-'));
+    write('src/svc/iface.cj',
+      'package demo.svc\n\n' +
+      'public interface IAuthService {\n' +
+      '    func sendCode(phone: String): Bool\n' +
+      '}\n');
+    write('src/svc/real.cj',
+      'package demo.svc\n\n' +
+      'public class RealAuthService {\n' +
+      '    public func sendCode(phone: String): Bool { true }\n' +
+      '}\n\n' +
+      'let _auth = RealAuthService()\n\n' +
+      'public func getRealAuthService(): RealAuthService {\n' +
+      '    _auth\n' +
+      '}\n');
+    write('src/ui/login.cj',
+      'package demo.ui\n\n' +
+      'import demo.svc.*\n\n' +
+      'public func submit(): Unit {\n' +
+      '    let authService = getRealAuthService()\n' +
+      '    authService.sendCode("1")\n' +
+      '}\n\n' +
+      'public func submitChained(): Unit {\n' +
+      '    getRealAuthService().sendCode("2")\n' +
+      '}\n');
+
+    cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+
+    const methods = cg.getNodesByKind('method');
+    const real = methods.find((n) => n.qualifiedName === 'demo.svc::RealAuthService::sendCode')!;
+    const iface = methods.find((n) => n.qualifiedName === 'demo.svc::IAuthService::sendCode')!;
+    for (const name of ['submit', 'submitChained']) {
+      const fn = cg.getNodesByKind('function').find((n) => n.name === name)!;
+      const targets = cg.getOutgoingEdges(fn.id).filter((e) => e.kind === 'calls').map((e) => e.target);
+      expect(targets).toContain(real.id);
+      expect(targets).not.toContain(iface.id);
+    }
+  });
 });

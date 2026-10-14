@@ -9,12 +9,17 @@
  *     `import fountain::f_base.*` (every file of an org-qualified module
  *     lost its package);
  *   - bracketed annotations: `@Deprecated[message: "…"]`,
- *     `@Annotation[target: [A, B]]` — the grammar knows only bare `@Name`;
+ *     `@Annotation[target: [A, B]]` — the grammar knows only bare `@Name`
+ *     (the arguments are blanked, the name kept);
  *   - abstract properties, `prop size: Int64` with no accessor body (an
  *     interface's properties) — the grammar requires the body;
  *   - byte literals `b'"'`, integer suffixes written `0_i32`;
  *   - a string literal used as a receiver: `"null".toArray()`;
- *   - nested block comments `/* … /* … *\/ … *\/`.
+ *   - nested block comments `/* … /* … *\/ … *\/`;
+ *   - single-quoted raw strings `#'…'#` (the scanner handles only `#"…"#`);
+ *   - a UI attribute chain continued past a blank or comment line;
+ *   - consecutive members annotated on their own line (`@Builder func f()`);
+ *   - grouped imports spanning lines or ending in a comma (`import a.{\n B,\n}`).
  *
  * Rewrites only ever touch code — a lexer pass first marks the bytes that
  * are inside strings and comments.
@@ -26,18 +31,26 @@ type Mask = Uint8Array;
 const IDENT = /[A-Za-z0-9_]/;
 
 /**
- * Body-less properties rewritten to body-less functions, by the rewritten
- * source: the extractor reads this back to emit them as `property` nodes.
+ * What preParse rewrote that the extractor reads back, by the rewritten source:
+ *   - `props`: start offsets of body-less `prop`s rewritten to `func`s, emitted
+ *     back as `property` nodes;
+ *   - `attrHeads`: offsets of attribute names whose line-leading `.` was
+ *     blanked (a chain continued after a blank or comment line), emitted back
+ *     as chained UI attributes.
  * preParse is deterministic and running it again on its own output rewrites
  * nothing, so entries are only ever added; the map is capped to the most
  * recent sources.
  */
-const REWRITTEN_PROPS = new Map<string, Set<number>>();
-const REWRITTEN_PROPS_CAP = 32;
+export interface CangjieRewrites {
+  props: ReadonlySet<number>;
+  attrHeads: ReadonlySet<number>;
+}
+const REWRITES = new Map<string, CangjieRewrites>();
+const REWRITES_CAP = 32;
 
-/** Start offsets of the declarations preParse rewrote from `prop` to `func`. */
-export function cangjieRewrittenProps(source: string): ReadonlySet<number> | undefined {
-  return REWRITTEN_PROPS.get(source);
+/** What preParse rewrote in `source` (the rewritten text), if anything the extractor reads back. */
+export function cangjieRewrites(source: string): CangjieRewrites | undefined {
+  return REWRITES.get(source);
 }
 
 /** Lex `src` into a code / string / comment mask. Interpolations `${…}` are code. */
@@ -156,12 +169,16 @@ function blank(out: string[], from: number, to: number): void {
   for (let k = from; k < to; k++) if (out[k] !== '\n' && out[k] !== '\r') out[k] = ' ';
 }
 
+/** A line holding a function's annotations before its `func` (brackets already blanked). */
+const SAME_LINE_ANNOTATED_FUNC =
+  /^([ \t]*)((?:@[A-Za-z_]\w*[ \t]+)+)(?=(?:(?:public|private|protected|internal|open|override|static|redef|mut|unsafe|operator|abstract|sealed|const)[ \t]+)*func\b)/;
+
 const PROP_LINE =
   /^([ \t]*)((?:(?:public|private|protected|internal|open|mut|static|override|redef|abstract|sealed|unsafe)[ \t]+)*)prop([ \t]+)([A-Za-z_]\w*)[ \t]*:([^\n{=]*?)[ \t]*$/;
 
 export function preParseCangjie(source: string): string {
   // Cheap gate: nothing to do for sources with none of the trigger shapes.
-  if (!/::|@\w+\[|\bprop\b|b'|_[iuf]\d|["']\s*\.|\/\*/.test(source)) return source;
+  if (!/::|@\w+\[|\bprop\b|b'|_[iuf]\d|["']\s*\.|\/\*|#'|\n\s*[.@]|import[^\n]*\{/.test(source)) return source;
 
   const { mask, strings, nestedCommentMarks } = lex(source);
   const out = source.split('');
@@ -176,6 +193,21 @@ export function preParseCangjie(source: string): string {
   // Byte literals `b'x'` → `0` (an integer literal of the same width), and
   // string receivers `"x".m()` → an identifier of the same width.
   for (const [start, end] of strings) {
+    // Single-quoted raw string `#'a\d'#` → `#"a\d"#`: the grammar's scanner
+    // knows only the double-quoted form. Same delimiters' width; skipped when
+    // the content holds the double-quoted closer (`"#`) itself.
+    if (source[start] === '#') {
+      let q = start;
+      while (source[q] === '#') q++;
+      const hashes = q - start;
+      const closeAt = end - hashes - 1;
+      if (source[q] === "'" && source[closeAt] === "'" && closeAt > q &&
+          !source.slice(q + 1, closeAt).includes('"' + '#'.repeat(hashes))) {
+        out[q] = '"';
+        out[closeAt] = '"';
+      }
+      continue;
+    }
     const prev = source[start - 1];
     const prev2 = source[start - 2];
     if (prev === 'b' && source[start] === "'" && (!prev2 || !IDENT.test(prev2)) && isCode(start - 1)) {
@@ -192,8 +224,9 @@ export function preParseCangjie(source: string): string {
     }
   }
 
-  // Bracketed annotations `@Name[…]` → blanks (the declaration they decorate
-  // stays). Brackets are matched over code bytes only.
+  // Bracketed annotations `@Name[…]` → `@Name` + blanks: the grammar parses a
+  // bare annotation, and its name is what the declaration's decorators keep.
+  // Brackets are matched over code bytes only.
   const annot = /@[A-Za-z_]\w*\[/g;
   let m: RegExpExecArray | null;
   while ((m = annot.exec(source)) !== null) {
@@ -206,8 +239,32 @@ export function preParseCangjie(source: string): string {
       else if (source[k] === ']' && --depth === 0) break;
     }
     if (depth !== 0) continue;
-    blank(out, m.index, k + 1);
+    blank(out, m.index + m[0].length - 1, k + 1);
     annot.lastIndex = k + 1;
+  }
+
+  // Grouped imports over several lines, or with a trailing comma —
+  // `import a.b.{\n    C,\n    D,\n}` — have no parse. Gather the names onto
+  // the first line (`{C, D}`) and keep the newlines after it as blank lines.
+  const group = /^[ \t]*(?:(?:public|protected|internal|private)[ \t]+)?import[ \t]+[\w.:` \t]*\{/gm;
+  while ((m = group.exec(source)) !== null) {
+    const open = m.index + m[0].length - 1;
+    if (!isCode(open)) continue;
+    let close = open + 1;
+    while (close < source.length && !(source[close] === '}' && isCode(close))) close++;
+    if (close >= source.length) break;
+    const inner = source.slice(open + 1, close);
+    if (!inner.includes('\n') && !/,\s*$/.test(inner)) continue;
+    let code = '';
+    for (let k = open + 1; k < close; k++) code += mask[k] === 2 ? ' ' : source[k];
+    const items = code.split(',').map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean);
+    const compact = `{${items.join(', ')}}`;
+    const newlines = (inner.match(/\n/g) ?? []).length;
+    const span = close - open + 1;
+    if (items.length === 0 || compact.length + newlines > span) continue;
+    const rewritten = compact + '\n'.repeat(newlines) + ' '.repeat(span - compact.length - newlines);
+    for (let k = 0; k < span; k++) out[open + k] = rewritten[k]!;
+    group.lastIndex = close + 1;
   }
 
   // Integer suffix written with a separator: `0_i32` → `0    `.
@@ -218,12 +275,70 @@ export function preParseCangjie(source: string): string {
 
   // Line-based rewrites.
   const props = new Set<number>();
+  const attrHeads = new Set<number>();
+  // Last code character of the last line holding code, and whether a blank or
+  // comment-only line has come since.
+  let lastCodeChar = '';
+  let gapSinceCode = false;
   let lineStart = 0;
   while (lineStart <= source.length) {
     const nl = source.indexOf('\n', lineStart);
     const lineEnd = nl < 0 ? source.length : nl;
     const line = source.slice(lineStart, lineEnd);
     const firstCode = lineStart + (line.length - line.trimStart().length);
+
+    // A chain continued past a blank or comment line — `Row()`, `// note`,
+    // `.width(5)` — has no parse: the grammar breaks a chain at either. Blank
+    // the leading dot so `width(5).height(3)` parses as a call chain of its
+    // own, and record it: the extractor emits those calls as the attributes
+    // they are.
+    if (gapSinceCode && isCode(firstCode) && source[firstCode] === '.' &&
+        /[A-Za-z_`]/.test(source[firstCode + 1] ?? '') && (lastCodeChar === ')' || lastCodeChar === '}')) {
+      out[firstCode] = ' ';
+      attrHeads.add(firstCode + 1);
+    }
+    let lineLast = '';
+    let lineHasText = false;
+    for (let k = lineStart; k < lineEnd; k++) {
+      const c = source[k]!;
+      if (c === ' ' || c === '\t' || c === '\r') continue;
+      if (mask[k] === 2) continue;
+      lineHasText = true;
+      if (mask[k] === 0) lineLast = c;
+    }
+    if (lineHasText) {
+      lastCodeChar = lineLast;
+      gapSinceCode = false;
+    } else {
+      gapSinceCode = true;
+    }
+
+    // `@Builder func f()` written on one line: the grammar accepts it once, but
+    // a second such member in the same body ERRORs (and loses the rest of the
+    // class). Move the annotations onto the end of the line above — `} @Builder`
+    // / `{ @Builder` / a blank line — and pad this one: the same bytes in the
+    // same span, so `func` keeps its byte offset and every later line its
+    // number. The annotation stays a parsed `@Builder`, so decorators keep it.
+    if (isCode(firstCode) && source[firstCode] === '@' && lineStart > 0) {
+      const current = out.slice(lineStart, lineEnd).join('');
+      const am = SAME_LINE_ANNOTATED_FUNC.exec(current);
+      const prevEnd = lineStart - 1; // the newline ending the line above
+      let prevLast = prevEnd - 1;
+      while (prevLast >= 0 && (source[prevLast] === ' ' || source[prevLast] === '\t' || source[prevLast] === '\r')) prevLast--;
+      // Code, a blank line, or a closed `/* … */` can take them; a `//` comment can't.
+      const prevOk = prevLast < 0 || source[prevLast] === '\n' || mask[prevLast] === 0 ||
+        (source[prevLast] === '/' && source[prevLast - 1] === '*' && mask[prevLast] === 2);
+      if (am && prevOk) {
+        const indent = am[1]!.length;
+        const annotations = am[2]!.trimEnd();
+        const span = 1 + indent + am[2]!.length; // newline + indent + annotations
+        const moved = ' ' + annotations + '\n' + ' '.repeat(span - annotations.length - 2);
+        for (let k = 0; k < span; k++) out[prevEnd + k] = moved[k]!;
+      } else if (am) {
+        // Nowhere to move them: drop the annotations rather than the class body.
+        blank(out, lineStart + am[1]!.length, lineStart + am[1]!.length + am[2]!.length);
+      }
+    }
 
     if (isCode(firstCode)) {
       // `package org::pkg.sub` / `import org::pkg.*` → `org. pkg…`
@@ -258,12 +373,12 @@ export function preParseCangjie(source: string): string {
   }
 
   const result = out.join('');
-  if (props.size > 0) {
-    if (REWRITTEN_PROPS.size >= REWRITTEN_PROPS_CAP) {
-      const oldest = REWRITTEN_PROPS.keys().next().value;
-      if (oldest !== undefined) REWRITTEN_PROPS.delete(oldest);
+  if (props.size > 0 || attrHeads.size > 0) {
+    if (REWRITES.size >= REWRITES_CAP) {
+      const oldest = REWRITES.keys().next().value;
+      if (oldest !== undefined) REWRITES.delete(oldest);
     }
-    REWRITTEN_PROPS.set(result, props);
+    REWRITES.set(result, { props, attrHeads });
   }
   return result;
 }

@@ -2,7 +2,7 @@ import type { Node as SyntaxNode } from 'web-tree-sitter';
 import { getNodeText, getChildByField, getPrecedingDocstring, cleanCommentMarkers } from '../tree-sitter-helpers';
 import type { ExtractorContext, LanguageExtractor } from '../tree-sitter-types';
 import type { Node, NodeKind } from '../../types';
-import { cangjieRewrittenProps, preParseCangjie } from './cangjie-preparse';
+import { cangjieRewrites, preParseCangjie } from './cangjie-preparse';
 
 /**
  * Cangjie (仓颉) extractor — Cangjie-SIG/tree-sitter-cangjie 1.1.0 (MIT, ABI 14).
@@ -19,9 +19,9 @@ import { cangjieRewrittenProps, preParseCangjie } from './cangjie-preparse';
  *   - `propertyDefinition` (`prop size: Int64 { get() {…} }`) — a property
  *     whose getter/setter blocks are walked as its own code.
  *   - `extendDefinition` (`extend Point <: ToString { … }`) — members join
- *     the extended type when it is declared in the same file; otherwise they
- *     are methods qualified by the receiver (getReceiverType). The `<:` list
- *     is an `implements` from the extended type.
+ *     the extended type when it is declared in the same file; otherwise an
+ *     extension node marked `extend` holds them. The `<:` list is an
+ *     `implements` from whichever holds them.
  *   - `importList` — `import a.b.C`, `import a.b.*`, `import a.b.{C, D}`,
  *     `import a.b.C as D`: one import node + `imports` ref per imported FQN.
  *
@@ -53,6 +53,9 @@ const BODY_TYPES = new Set([
 ]);
 
 const TYPE_LIKE_KINDS = new Set<NodeKind>(['class', 'struct', 'interface', 'enum']);
+
+/** Decorator marking the extension node of an `extend` whose type is declared elsewhere. */
+export const CANGJIE_EXTEND_MARKER = 'extend';
 
 /** `` `type` `` → `type`: a backtick-escaped identifier names the bare word. */
 function unquote(name: string): string {
@@ -106,26 +109,6 @@ function boundNames(node: SyntaxNode): SyntaxNode[] {
   return vn.descendantsOfType('varBindingPattern').filter((n): n is SyntaxNode => !!n);
 }
 
-const TYPE_DEFINITIONS: Record<string, string> = {
-  classDefinition: 'className',
-  structDefinition: 'structName',
-  interfaceDefinition: 'interfaceName',
-  enumDefinition: 'enumName',
-};
-
-/** Whether the file `node` is in declares a top-level type named `typeName`. */
-function declaresTypeInFile(node: SyntaxNode, typeName: string, source: string): boolean {
-  let root: SyntaxNode = node;
-  while (root.parent) root = root.parent;
-  for (const decl of root.namedChildren) {
-    const nameType = decl ? TYPE_DEFINITIONS[decl.type] : undefined;
-    if (!decl || !nameType) continue;
-    const nameNode = childOfType(decl, nameType);
-    if (nameNode && getNodeText(nameNode, source).trim() === typeName) return true;
-  }
-  return false;
-}
-
 /**
  * The grammar nests an interface body left-recursively (`interfaceBody →
  * interfaceBody → … → member`), so the doc comment above the first member is
@@ -161,8 +144,43 @@ function headerTrailingDoc(node: SyntaxNode, source: string): string | undefined
   return comments.map((c) => cleanCommentMarkers(getNodeText(c, source))).join('\n').trim() || undefined;
 }
 
+/** Annotations (`@Component`, `@Builder`) stand between a declaration and its doc comment. */
+const DOC_STEP_OVER = ['macroExpression'];
+
 function docOf(node: SyntaxNode, source: string): string | undefined {
-  return getPrecedingDocstring(declarationWrapper(node) ?? node, source) ?? headerTrailingDoc(node, source);
+  return getPrecedingDocstring(declarationWrapper(node) ?? node, source, DOC_STEP_OVER) ?? headerTrailingDoc(node, source);
+}
+
+const ANNOTATED_TYPES = new Set([
+  'classDefinition', 'structDefinition', 'interfaceDefinition', 'enumDefinition', 'functionDefinition',
+  'mainDefinition', 'operatorFunctionDefinition', 'init', 'primaryInit', 'variableDeclaration',
+  'propertyDefinition', 'typeAlias', 'macroDefinition', 'extendDefinition',
+]);
+
+/**
+ * A declaration's annotations, by name. Two grammar shapes: a type or
+ * function's `@Component` / `@Builder` parses as `macroExpression` siblings
+ * written before it, a member variable's `@State` / `@Link` as its own
+ * `annotationList`. ArkUI-in-Cangjie keys off both (components, reactive
+ * state, builder helpers); they also make `@Entry` pages searchable.
+ */
+function annotationsOf(node: SyntaxNode): string[] | undefined {
+  if (!ANNOTATED_TYPES.has(node.type)) return undefined;
+  const names: string[] = [];
+  let sib = (declarationWrapper(node) ?? node).previousNamedSibling;
+  while (sib && (sib.type === 'macroExpression' || COMMENT_TYPES.has(sib.type))) {
+    const name = sib.type === 'macroExpression' ? childOfType(sib, 'macroName') : null;
+    if (name) names.unshift(name.text.trim());
+    sib = sib.previousNamedSibling;
+  }
+  for (const list of node.namedChildren) {
+    if (list?.type !== 'annotationList') continue;
+    for (const anno of list.namedChildren) {
+      const name = anno ? childOfType(anno, 'annotationName') : null;
+      if (name) names.push(name.text.trim());
+    }
+  }
+  return names.length > 0 ? names : undefined;
 }
 
 function topScope(ctx: ExtractorContext): Node | undefined {
@@ -204,7 +222,9 @@ function importedFqns(node: SyntaxNode, source: string): string[] {
       const group = childOfType(child, 'packageGroup');
       const base = pkg ? getNodeText(pkg, source) : '';
       for (const member of group?.namedChildren ?? []) {
-        if (member) fqns.push(base ? `${base}.${getNodeText(member, source)}` : getNodeText(member, source));
+        // `{C, D as E}` — the alias renames locally; the FQN names `D`.
+        const name = member ? getNodeText(member, source).trim().split(/\s+as\s+/)[0]! : '';
+        if (name) fqns.push(base ? `${base}.${name}` : name);
       }
     }
   }
@@ -214,6 +234,31 @@ function importedFqns(node: SyntaxNode, source: string): string[] {
     if (own) fqns.push(getNodeText(own, source));
   }
   return fqns.map((f) => f.replace(/\s+/g, ''));
+}
+
+/** Annotations that make a class an ArkUI component (mirrored by the state→build synthesizer). */
+const COMPONENT_ANNOTATIONS = new Set([
+  'Component', 'ComponentV2', 'Entry', 'CustomDialog', 'Reusable', 'HybridComponentEntry',
+]);
+
+/**
+ * Whether `node` is view code, where `Text("x").fontSize(16)` chains UI
+ * attributes onto a component: inside a `build()` or an `@Builder` function,
+ * or any member of an annotated component class (its row/section helpers
+ * build views without either marker).
+ */
+function inViewCode(node: SyntaxNode): boolean {
+  for (let n = node.parent; n; n = n.parent) {
+    if (n.type === 'functionDefinition' &&
+        (childOfType(n, 'funcName')?.text === 'build' || (annotationsOf(n) ?? []).includes('Builder'))) {
+      return true;
+    }
+    if (n.type === 'classDefinition' || n.type === 'structDefinition') {
+      return (annotationsOf(n) ?? []).some((a) => COMPONENT_ANNOTATIONS.has(a));
+    }
+    if (n.type === 'translationUnit') return false;
+  }
+  return false;
 }
 
 /** A call found in a postfix run: the callee name and the node to position it on. */
@@ -232,8 +277,15 @@ const SELF_RECEIVERS = new Set(['this', 'super']);
  *   this.foo()       → `foo`           (super/this receivers drop)
  *   recv.foo()       → `recv.foo`
  *   this.recv.foo()  → `recv.foo`
- *   Foo.make().bar() → `Foo.make`, `Foo.make().bar`  (capitalized head only)
+ *   Foo.make().bar() → `Foo.make`, `Foo.make().bar`  (capitalized head)
+ *   getSvc().run()   → `getSvc`, `getSvc().run`      (top-level function head)
  *   a.b.c.d()        → `d`             (deep chains: bare name)
+ *   Text("x").fontSize(16) in view code → `Text`, `.fontSize`
+ *
+ * The dot-prefixed `.fontSize` is a chained UI attribute: resolution links it
+ * only to an attribute helper (`@Builder`/`@Extend`/`@Styles`), never to an
+ * unrelated method that shares the name — on an ArkUI app `.width(…)` and
+ * `.margin(…)` sit on nearly every view line.
  */
 export function cangjieCallees(node: SyntaxNode, source: string): CangjieCallee[] {
   const out: CangjieCallee[] = [];
@@ -246,6 +298,15 @@ export function cangjieCallees(node: SyntaxNode, source: string): CangjieCallee[
   let opaque = false;
   let lastCall: string | null = null; // callee text of the call whose result we're chaining on
   let literalHead = false;
+  // A capitalized component call (`Text(…)`, `Column { … }`) heading a chain in view code.
+  const uiChain =
+    children[0]!.type === 'atomicVariable' &&
+    (children[1]?.type === 'callSuffix' || children[1]?.type === 'trailingLambdaExpression') &&
+    inViewCode(node);
+  let afterHeadCall = false;
+  let uiChainBroken = false;
+  // A chain preParse cut loose at a blank or comment line: `width(5)` was `.width(5)`.
+  const continued = cangjieRewrites(source)?.attrHeads.has(children[0]!.startIndex) ?? false;
 
   const head = children[0]!;
   if (head.type === 'thisSuperExpression') {
@@ -262,6 +323,7 @@ export function cangjieCallees(node: SyntaxNode, source: string): CangjieCallee[
       // typeArguments (`foo<Int64>(…)`) don't change the callee name.
     }
     if (path.length === 0) opaque = true;
+    if (uiChain && !(path.length === 1 && /^[A-Z]/.test(path[0]!))) uiChainBroken = true;
     // preParse spells a string-literal receiver (`"x".m()`) as `_sss…`: a
     // builtin of String, never a project symbol — emit nothing for that call.
     if (path.length >= 2 && /^_s+$/.test(path[0]!)) literalHead = true;
@@ -278,11 +340,19 @@ export function cangjieCallees(node: SyntaxNode, source: string): CangjieCallee[
       literalHead = false;
       return;
     }
+    if (continued || (uiChain && !uiChainBroken && afterHeadCall)) {
+      out.push({ name: `.${method}`, node: at });
+      return;
+    }
     let name: string;
     if (lastCall !== null) {
-      // Chained on a call result: keep the inner call only for a
-      // capitalized (type / companion-factory) head, as Kotlin/Scala do.
-      name = /^[A-Z]/.test(lastCall) && path.length === 1 ? `${lastCall}().${method}` : method;
+      // Chained on a call result: keep the inner call when resolution can
+      // type it — a capitalized (type / companion-factory) head, as for
+      // Kotlin/Scala, or a top-level function (`getAuthService().sendCode`),
+      // typed by its declared return type, as for Go.
+      name = (/^[A-Z]/.test(lastCall) || !lastCall.includes('.')) && path.length === 1
+        ? `${lastCall}().${method}`
+        : method;
     } else if (opaque) {
       name = method;
     } else {
@@ -304,6 +374,7 @@ export function cangjieCallees(node: SyntaxNode, source: string): CangjieCallee[
       }
       case 'callSuffix':
         emit(s);
+        afterHeadCall = true;
         lastCall = calleeText(path, lastCall);
         path = [];
         opaque = false;
@@ -313,6 +384,7 @@ export function cangjieCallees(node: SyntaxNode, source: string): CangjieCallee[
         // `foo(x) { … }` is the same call as its callSuffix; `foo { … }` is a call.
         if (!prevWasCall) {
           emit(s);
+          afterHeadCall = true;
           lastCall = calleeText(path, lastCall);
           path = [];
           opaque = false;
@@ -398,6 +470,10 @@ export const cangjieExtractor: LanguageExtractor = {
 
   getDeclarationWrapper: (node) => declarationWrapper(node),
 
+  docstringStepOverTypes: DOC_STEP_OVER,
+
+  extractModifiers: (node) => annotationsOf(node),
+
   // Not a body docstring: the doc comment tree-sitter attached to the
   // preceding package/import line (see headerTrailingDoc).
   getBodyDocstring: (node, source) => (node.parent ? headerTrailingDoc(node, source) : undefined),
@@ -426,19 +502,6 @@ export const cangjieExtractor: LanguageExtractor = {
 
   isAbstract: (node) => modifierWords(node).includes('abstract') || undefined,
 
-  getReceiverType: (node, source) => {
-    // Only a member written inside an `extend` block of a type declared in
-    // ANOTHER file needs the receiver — one in the same file is walked with
-    // its type on the scope stack (see visitNode).
-    const body = node.parent;
-    if (body?.type !== 'extendBody') return undefined;
-    const ext = body.parent;
-    if (!ext || ext.type !== 'extendDefinition') return undefined;
-    const typeName = extendedTypeOf(ext, source);
-    if (!typeName || declaresTypeInFile(ext, typeName, source)) return undefined;
-    return typeName;
-  },
-
   packageTypes: ['packageDeclaration', 'macroPackageDeclaration'],
   extractPackage: (node, source) => {
     const pkg = getChildByField(node, 'packageName') ?? childOfType(node, 'scoped_identifier') ?? childOfType(node, 'identifier');
@@ -455,18 +518,16 @@ export const cangjieExtractor: LanguageExtractor = {
 
       case 'functionDefinition': {
         // A body-less `prop` preParse turned into a function.
-        if (!cangjieRewrittenProps(ctx.source)?.has(node.startIndex)) return false;
+        if (!cangjieRewrites(ctx.source)?.props.has(node.startIndex)) return false;
         const nameNode = childOfType(node, 'funcName');
         if (!nameNode) return false;
         const ret = childOfType(node, 'returnType');
-        const receiver = cangjieExtractor.getReceiverType!(node, ctx.source);
         const name = identText(nameNode, ctx.source);
         ctx.createNode('property', name, node, {
           docstring: docOf(node, ctx.source),
           signature: ret ? getNodeText(ret, ctx.source).replace(/^:\s*/, '') : undefined,
           visibility: visibilityOf(node),
           isStatic: modifierWords(node).includes('static'),
-          ...(receiver ? { qualifiedName: `${receiver}::${name}` } : {}),
         });
         return true;
       }
@@ -526,14 +587,12 @@ export const cangjieExtractor: LanguageExtractor = {
         const nameNode = childOfType(node, 'propertyName');
         if (!nameNode) return false;
         const typeNode = getChildByField(node, 'type');
-        const receiver = cangjieExtractor.getReceiverType!(node, ctx.source);
         const name = identText(nameNode, ctx.source);
         const prop = ctx.createNode('property', name, node, {
           docstring: docOf(node, ctx.source),
           signature: typeNode ? getNodeText(typeNode, ctx.source) : undefined,
           visibility: visibilityOf(node),
           isStatic: modifierWords(node).includes('static'),
-          ...(receiver ? { qualifiedName: `${receiver}::${name}` } : {}),
         });
         if (!prop) return true;
         // Calls attribute to the scope on top of the stack.
@@ -552,26 +611,34 @@ export const cangjieExtractor: LanguageExtractor = {
         const owner = typeName
           ? ctx.nodes.find((n) => n.name === typeName && n.filePath === ctx.filePath && TYPE_LIKE_KINDS.has(n.kind))
           : undefined;
-        if (owner) {
+        // A type declared in another file, or a builtin (`extend Int64 <:
+        // Countable`), gets an extension node of its own, marked `extend`, as a
+        // Swift extension does: it holds the members and the conformances, so
+        // interface dispatch reaches them. Resolution never lands a reference
+        // to the TYPE on it (see resolution/cangjie-target-gate.ts).
+        const holder = owner ?? (typeName
+          ? ctx.createNode('class', typeName, node, { decorators: [CANGJIE_EXTEND_MARKER], docstring: docOf(node, ctx.source) })
+          : null);
+        if (holder) {
           for (const sup of node.namedChildren) {
             if (sup?.type !== 'superOrInterface') continue;
             const name = bareTypeName(getNodeText(sup, ctx.source));
             if (!name) continue;
             ctx.addUnresolvedReference({
-              fromNodeId: owner.id,
+              fromNodeId: holder.id,
               referenceName: name,
               referenceKind: 'implements',
               line: sup.startPosition.row + 1,
               column: sup.startPosition.column,
             });
           }
-          ctx.pushScope(owner.id);
+          ctx.pushScope(holder.id);
         }
         const body = childOfType(node, 'extendBody');
         for (const child of body?.namedChildren ?? []) {
           if (child) ctx.visitNode(child);
         }
-        if (owner) ctx.popScope();
+        if (holder) ctx.popScope();
         return true;
       }
 
