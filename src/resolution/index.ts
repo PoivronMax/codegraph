@@ -77,7 +77,7 @@ const RESOLUTION_READ_EDGE_KINDS: Edge['kind'][] = ['implements', 'extends'];
  * second pass. Dotted-receiver languages resolve via matchDottedCallChain; the
  * `::`-receiver ones (Rust) via matchScopedCallChain.
  */
-const CHAIN_LANGUAGES = new Set(['java', 'kotlin', 'csharp', 'swift', 'rust', 'go', 'scala', 'dart', 'objc', 'pascal']);
+const CHAIN_LANGUAGES = new Set(['java', 'kotlin', 'csharp', 'swift', 'rust', 'go', 'scala', 'dart', 'objc', 'pascal', 'cangjie']);
 const SCOPED_CHAIN_LANGUAGES = new Set(['rust']);
 
 /** The extractor's chained-receiver encoding: `<inner>().<method>`. */

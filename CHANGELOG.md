@@ -12,6 +12,10 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### New Features
+
+- CodeGraph now indexes **Cangjie** (仓颉, `.cj`), the HarmonyOS application language: functions, classes, structs, interfaces, enums, `extend` blocks, properties, fields and type aliases, with call, import and inheritance edges. Imports resolve through each file's `package` (organization-qualified `org::pkg` names included), and a call through an interface reaches every class that implements it, so `codegraph_explore` can follow a Cangjie flow end to end.
+
 ### Fixes
 
 - In VB.NET, every member of a `Structure` is now indexed, including its fields, properties, methods, constructors and nested enums. Before, only the first member was, so the rest could not be found and their callers looked empty.
