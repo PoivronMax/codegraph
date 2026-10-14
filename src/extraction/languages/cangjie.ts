@@ -57,6 +57,9 @@ const TYPE_LIKE_KINDS = new Set<NodeKind>(['class', 'struct', 'interface', 'enum
 /** Decorator marking the extension node of an `extend` whose type is declared elsewhere. */
 export const CANGJIE_EXTEND_MARKER = 'extend';
 
+/** Decorator marking a `foreign func` — a declaration of a C function. */
+export const CANGJIE_FOREIGN_MARKER = 'foreign';
+
 /** `` `type` `` → `type`: a backtick-escaped identifier names the bare word. */
 function unquote(name: string): string {
   return name.length > 2 && name.startsWith('`') && name.endsWith('`') ? name.slice(1, -1) : name;
@@ -173,6 +176,10 @@ function annotationsOf(node: SyntaxNode): string[] | undefined {
     if (name) names.unshift(name.text.trim());
     sib = sib.previousNamedSibling;
   }
+  // A `foreign func` (alone or in a `foreign { … }` block) is implemented in
+  // C; the FFI synthesizer links it to that function by name.
+  const holder = node.parent?.type === 'foreignBody' ? node.parent.parent : node.parent;
+  if (node.type === 'functionDefinition' && holder?.type === 'foreignDeclaration') names.push(CANGJIE_FOREIGN_MARKER);
   for (const list of node.namedChildren) {
     if (list?.type !== 'annotationList') continue;
     for (const anno of list.namedChildren) {

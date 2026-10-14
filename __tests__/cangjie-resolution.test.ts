@@ -248,6 +248,24 @@ describe('Cangjie package/import resolution', () => {
       'public func getRealAuthService(): RealAuthService {\n' +
       '    _auth\n' +
       '}\n');
+    write('src/svc/stream.cj',
+      'package demo.svc\n\n' +
+      'public class RawStream {\n' +
+      '    public func handshake(): Bool { true }\n' +
+      '}\n\n' +
+      'public class OtherStream {\n' +
+      '    public func handshake(): Bool { false }\n' +
+      '}\n\n' +
+      'public class Context {\n' +
+      '    public func createStream(): RawStream { RawStream() }\n' +
+      '}\n');
+    write('src/ui/connect.cj',
+      'package demo.ui\n\n' +
+      'import demo.svc.*\n\n' +
+      'public func connect(context: Context): Bool {\n' +
+      '    let stream = context.createStream()\n' +
+      '    stream.handshake()\n' +
+      '}\n');
     write('src/ui/login.cj',
       'package demo.ui\n\n' +
       'import demo.svc.*\n\n' +
@@ -265,11 +283,46 @@ describe('Cangjie package/import resolution', () => {
     const methods = cg.getNodesByKind('method');
     const real = methods.find((n) => n.qualifiedName === 'demo.svc::RealAuthService::sendCode')!;
     const iface = methods.find((n) => n.qualifiedName === 'demo.svc::IAuthService::sendCode')!;
+    // A local bound from a method call has that method's return type.
+    const connect = cg.getNodesByKind('function').find((n) => n.name === 'connect')!;
+    const rawHandshake = methods.find((n) => n.qualifiedName === 'demo.svc::RawStream::handshake')!;
+    expect(cg.getOutgoingEdges(connect.id).filter((e) => e.kind === 'calls').map((e) => e.target)).toContain(rawHandshake.id);
     for (const name of ['submit', 'submitChained']) {
       const fn = cg.getNodesByKind('function').find((n) => n.name === name)!;
       const targets = cg.getOutgoingEdges(fn.id).filter((e) => e.kind === 'calls').map((e) => e.target);
       expect(targets).toContain(real.id);
       expect(targets).not.toContain(iface.id);
     }
+  });
+
+  it('bridges a foreign func to the C function that implements it', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-cangjie-'));
+    write('src/tls/stream.cj',
+      'package demo.tls\n\n' +
+      'foreign {\n' +
+      '    func CJ_TLS_Handshake(ssl: CPointer<Unit>): Int32\n' +
+      '}\n\n' +
+      'public func handshake(ssl: CPointer<Unit>): Int32 {\n' +
+      '    unsafe { CJ_TLS_Handshake(ssl) }\n' +
+      '}\n');
+    write('src/tls/native/tls.h', 'int CJ_TLS_Handshake(void* ssl);\n');
+    write('src/tls/native/tls.c',
+      '#include "tls.h"\n' +
+      'static int doHandshake(void* ssl) { return 1; }\n' +
+      'int CJ_TLS_Handshake(void* ssl) {\n' +
+      '    return doHandshake(ssl);\n' +
+      '}\n');
+
+    cg = CodeGraph.initSync(tmpDir);
+    await cg.indexAll();
+
+    const fns = cg.getNodesByKind('function');
+    const decl = fns.find((n) => n.name === 'CJ_TLS_Handshake' && n.language === 'cangjie')!;
+    const impl = fns.find((n) => n.name === 'CJ_TLS_Handshake' && n.language === 'c' && n.filePath.endsWith('.c'))!;
+    const handshake = fns.find((n) => n.name === 'handshake')!;
+    expect(cg.getOutgoingEdges(handshake.id).map((e) => e.target)).toContain(decl.id);
+    const bridge = cg.getOutgoingEdges(decl.id).filter((e) => e.kind === 'calls');
+    expect(bridge.map((e) => e.target)).toEqual([impl.id]);
+    expect(bridge[0]!.provenance).toBe('heuristic');
   });
 });

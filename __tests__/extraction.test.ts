@@ -14137,6 +14137,27 @@ class Page {
     expect(imports).toEqual(['demo.svc.Alpha', 'demo.svc.beta']);
   });
 
+  it('marks foreign declarations', () => {
+    const code = `package demo.ffi
+
+foreign func CJ_A(x: Int32): Int32
+
+foreign {
+    func CJ_B(): Unit
+}
+
+func use(): Int32 {
+    unsafe { CJ_A(1) }
+}
+`;
+    const result = extractFromSource('src/ffi.cj', code);
+    const fn = (name: string) => result.nodes.find((n) => n.name === name);
+    expect(fn('CJ_A')?.decorators).toEqual(['foreign']);
+    expect(fn('CJ_B')?.decorators).toEqual(['foreign']);
+    expect(fn('use')?.decorators).toBeUndefined();
+    expect(calls(result)).toContain('CJ_A');
+  });
+
   it('parses single-quoted raw strings', () => {
     const code = "package demo.raw\n\nfunc f(): Unit {\n    let r = Regex(#'fountain\\((\\d+\\.)+\\d+\\)'#)\n    g()\n}\n\nfunc g(): Unit {}\n";
     const result = extractFromSource('src/raw.cj', code);

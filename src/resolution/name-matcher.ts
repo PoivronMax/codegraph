@@ -12755,11 +12755,12 @@ function enclosingScopeStartLine(ref: UnresolvedRef, context: ResolutionContext)
 }
 
 /**
- * The type of a Cangjie local bound from a call to a top-level function —
- * `let svc = getRealAuthService()` — read off that function's declared return
- * type. Scanned backwards from the call within its enclosing scope; null when
- * the function is unknown, returns nothing nameable, or same-named functions
- * disagree.
+ * The type of a Cangjie local bound from a call — `let svc = getAuthService()`,
+ * `let stream = context.createStream(socket)`, `let c = Conf.load()` — read
+ * off the called function's or method's declared return type. Scanned
+ * backwards from the call within its enclosing scope. A method is matched by
+ * name: every project method of that name must declare the same return type,
+ * else null (so does an unknown callee or a callee returning nothing nameable).
  */
 function cangjieFactoryLocalType(receiver: string, ref: UnresolvedRef, context: ResolutionContext): string | null {
   if (!/^[A-Za-z_]\w*$/.test(receiver)) return null;
@@ -12767,14 +12768,19 @@ function cangjieFactoryLocalType(receiver: string, ref: UnresolvedRef, context: 
     ? context.getFileLines(ref.filePath)
     : (context.readFile(ref.filePath)?.split(/\r?\n/) ?? null);
   if (!lines) return null;
-  const re = new RegExp(`\\b(?:let|var)\\s+${receiver}\\s*=\\s*([a-z_]\\w*)\\s*\\(`);
+  const re = new RegExp(`\\b(?:let|var)\\s+${receiver}\\s*=\\s*(?:([\\w.]+)\\.)?([A-Za-z_]\\w*)\\s*(?:<[^=;()]*>)?\\s*\\(`);
   const start = Math.max(0, enclosingScopeStartLine(ref, context) - 1);
   for (let i = Math.min(lines.length, ref.line) - 1; i >= start; i--) {
     const m = lines[i]?.match(re);
     if (!m) continue;
+    const viaReceiver = m[1] !== undefined;
+    const callee = m[2]!;
+    // `Foo(…)` constructs a Foo — the local-pattern scan already typed that.
+    if (!viaReceiver && /^[A-Z]/.test(callee)) return null;
     const returns = new Set(
-      context.getNodesByName(m[1]!)
-        .filter((n) => n.language === 'cangjie' && n.kind === 'function' && n.returnType)
+      context.getNodesByName(callee)
+        .filter((n) => n.language === 'cangjie' && n.returnType &&
+          (viaReceiver ? n.kind === 'method' || n.kind === 'function' : n.kind === 'function'))
         .map((n) => n.returnType!),
     );
     return returns.size === 1 ? [...returns][0]! : null;
@@ -13358,8 +13364,8 @@ export function matchMethodCall(
     // A pytest test's parameter is what its fixture returns: flaskbb's
     // `cli_runner.invoke(…)` is click's `CliRunner`, not the project's one `invoke`.
     if (!inferredType && ref.language === 'python' && dotMatch) inferredType = pythonFixtureReturnType(objectOrClass!, ref, context);
-    // A Cangjie local bound from a factory call (`let svc = getAuthService()`)
-    // has the type that function declares it returns.
+    // A Cangjie local bound from a call (`let svc = getAuthService()`,
+    // `let s = ctx.createStream(x)`) has the type the callee declares it returns.
     if (!inferredType && ref.language === 'cangjie' && dotMatch) inferredType = cangjieFactoryLocalType(objectOrClass!, ref, context);
     // A Go parameter named like an import is declared through a package as
     // often as not (`logger logger.Interface`), which the patterns above
